@@ -11,4 +11,7 @@
     <color name="colorPrimary">#004D61</color>
     <color name="colorSecondary">#ABA2FA</color>
     <color name="colorDarkMode">#5BD1D7</color>
+    <color name="greenOnline">#13FF06</color>
+    <color name="background">#F5F5F5</color>
+
 </resources>

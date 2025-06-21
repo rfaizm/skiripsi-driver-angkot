@@ -7,19 +7,19 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.example.driverangkot.ui.home.HomeFragment"
+        android:name="com.example.driverangkot.presentation.home.HomeFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/navigation_income"
-        android:name="com.example.driverangkot.ui.income.IncomeFragment"
+        android:name="com.example.driverangkot.presentation.income.IncomeFragment"
         android:label="@string/title_income"
         tools:layout="@layout/fragment_income" />
 
     <fragment
         android:id="@+id/navigation_profile"
-        android:name="com.example.driverangkot.ui.profile.ProfileFragment"
+        android:name="com.example.driverangkot.presentation.profile.ProfileFragment"
         android:label="@string/title_profile"
         tools:layout="@layout/fragment_profile" />
 </navigation>

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.register.personaldata.PersonalDataFragment">
+    tools:context=".presentation.register.personaldata.PersonalDataFragment">
 
     <!-- TODO: Update blank fragment layout -->
 
@@ -74,7 +74,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_upload_document" />
 
-    <com.example.driverangkot.ui.card.LayoutWarningRegister
+    <com.example.driverangkot.presentation.card.LayoutWarningRegister
         android:id="@+id/warning_layout"
         android:layout_width="0dp"
         android:layout_height="50dp"
@@ -103,7 +103,7 @@
             android:paddingBottom="8dp">
 
 
-            <com.example.driverangkot.ui.card.LayoutUploadDocument
+            <com.example.driverangkot.presentation.card.LayoutUploadDocument
                 android:id="@+id/upload_self_photo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -113,8 +113,8 @@
                 app:cardCornerRadius="10dp"
                 app:cardElevation="4dp" />
 
-            <com.example.driverangkot.ui.card.LayoutUploadDocument
-                android:id="@+id/upload_ktp"
+            <com.example.driverangkot.presentation.card.LayoutUploadDocument
+                    android:id="@+id/upload_ktp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
@@ -123,7 +123,7 @@
                 app:cardCornerRadius="10dp"
                 app:cardElevation="4dp" />
 
-            <com.example.driverangkot.ui.card.LayoutUploadDocument
+            <com.example.driverangkot.presentation.card.LayoutUploadDocument
                 android:id="@+id/upload_sim"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -133,13 +133,14 @@
                 app:cardCornerRadius="10dp"
                 app:cardElevation="4dp" />
 
-            <com.example.driverangkot.ui.card.LayoutUploadDocument
+            <com.example.driverangkot.presentation.card.LayoutUploadDocument
                 android:id="@+id/upload_stnk"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="16dp"
+                android:layout_marginBottom="8dp"
                 app:cardCornerRadius="10dp"
                 app:cardElevation="4dp" />
         </LinearLayout>
@@ -169,6 +170,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintGuide_percent="0.9"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progressIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
