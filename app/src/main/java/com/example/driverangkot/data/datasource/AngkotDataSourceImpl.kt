@@ -1,25 +1,24 @@
-package com.example.driverangkot.data.repository
+package com.example.driverangkot.data.datasource
 
 import android.util.Log
 import com.example.driverangkot.data.api.ApiService
 import com.example.driverangkot.data.api.dto.ToOfflineResponse
 import com.example.driverangkot.data.api.dto.ToOnlineResponse
 import com.example.driverangkot.data.api.dto.UpdateLocationResponse
-import com.example.driverangkot.data.datasource.AngkotDataSource
 import com.example.driverangkot.data.preference.UserPreference
-import com.example.driverangkot.domain.repository.AngkotRepository
-import retrofit2.HttpException
 
-class AngkotRepositoryImpl(
-    private val angkotDataSource: AngkotDataSource
-) : AngkotRepository {
+class AngkotDataSourceImpl(
+    private val apiService: ApiService,
+    private val userPreference: UserPreference
+) : AngkotDataSource {
 
-    private val TAG = "AngkotRepositoryImpl"
+    private val TAG = "AngkotDataSourceImpl"
 
     override suspend fun toOnline(latitude: Double, longitude: Double): ToOnlineResponse {
         try {
-            Log.d(TAG, "Fetching toOnline from DataSource")
-            return angkotDataSource.toOnline(latitude, longitude)
+            val token = userPreference.getAuthToken() ?: throw Exception("Token tidak ditemukan")
+            Log.d(TAG, "Calling toOnline with lat=$latitude, long=$longitude")
+            return apiService.toOnline("Bearer $token", latitude, longitude)
         } catch (e: Exception) {
             Log.e(TAG, "Error in toOnline: ${e.message}", e)
             throw e
@@ -28,8 +27,9 @@ class AngkotRepositoryImpl(
 
     override suspend fun toOffline(): ToOfflineResponse {
         try {
-            Log.d(TAG, "Fetching toOffline from DataSource")
-            return angkotDataSource.toOffline()
+            val token = userPreference.getAuthToken() ?: throw Exception("Token tidak ditemukan")
+            Log.d(TAG, "Calling toOffline")
+            return apiService.toOffline("Bearer $token")
         } catch (e: Exception) {
             Log.e(TAG, "Error in toOffline: ${e.message}", e)
             throw e
@@ -38,8 +38,9 @@ class AngkotRepositoryImpl(
 
     override suspend fun updateLocation(latitude: Double, longitude: Double): UpdateLocationResponse {
         try {
-            Log.d(TAG, "Fetching updateLocation from DataSource")
-            return angkotDataSource.updateLocation(latitude, longitude)
+            val token = userPreference.getAuthToken() ?: throw Exception("Token tidak ditemukan")
+            Log.d(TAG, "Calling updateLocation with lat=$latitude, long=$longitude")
+            return apiService.updateLocation("Bearer $token", latitude, longitude)
         } catch (e: Exception) {
             Log.e(TAG, "Error in updateLocation: ${e.message}", e)
             throw e

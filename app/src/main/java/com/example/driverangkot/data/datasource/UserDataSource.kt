@@ -1,4 +1,4 @@
-package com.example.driverangkot.domain.repository
+package com.example.driverangkot.data.datasource
 
 import com.example.driverangkot.data.api.dto.HistoryResponse
 import com.example.driverangkot.data.api.dto.LoginSuccessResponse
@@ -9,7 +9,7 @@ import com.example.driverangkot.domain.entity.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 
-interface UserRepository {
+interface UserDataSource {
     suspend fun register(
         fullName: RequestBody,
         noHp: RequestBody,
@@ -26,6 +26,6 @@ interface UserRepository {
     suspend fun login(email: String, password: String): LoginSuccessResponse
     suspend fun saveSession(user: User, token: String)
     suspend fun logout(): LogoutResponse
-    suspend fun getSaldo() : SaldoDriverResponse
+    suspend fun getSaldo(): SaldoDriverResponse
     suspend fun getHistory(): HistoryResponse
 }

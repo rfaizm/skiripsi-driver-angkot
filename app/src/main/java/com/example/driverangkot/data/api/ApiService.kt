@@ -1,10 +1,13 @@
 package com.example.driverangkot.data.api
 
+
 import com.example.driverangkot.data.api.dto.GetPlaceNameResponse
+import com.example.driverangkot.data.api.dto.HistoryResponse
 import com.example.driverangkot.data.api.dto.ListPassengerResponse
 import com.example.driverangkot.data.api.dto.LoginSuccessResponse
 import com.example.driverangkot.data.api.dto.LogoutResponse
 import com.example.driverangkot.data.api.dto.RegisterSuccessResponse
+import com.example.driverangkot.data.api.dto.SaldoDriverResponse
 import com.example.driverangkot.data.api.dto.ToOfflineResponse
 import com.example.driverangkot.data.api.dto.ToOnlineResponse
 import com.example.driverangkot.data.api.dto.UpdateLocationResponse
@@ -91,4 +94,14 @@ interface ApiService {
         @Field("order_id") orderId: String,
         @Field("status") status: String
     ) : UpdateOrderStatusResponse
+
+    @GET("driver/saldo")
+    suspend fun getSaldo(
+        @Header("Authorization") token: String,
+    ) : SaldoDriverResponse
+
+    @GET("driver/history")
+    suspend fun getHistory(
+        @Header("Authorization") token: String,
+    ) : HistoryResponse
 }

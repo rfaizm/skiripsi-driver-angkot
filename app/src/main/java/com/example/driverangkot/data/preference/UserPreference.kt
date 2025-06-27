@@ -26,6 +26,7 @@ class UserPreference(private val dataStore: DataStore<Preferences>) {
             preferences[NO_HP_EMERGENCY_KEY] = user.noHpEmergency
             preferences[EMAIL_KEY] = user.email
             preferences[NAME_KEY] = user.name
+            preferences[PLATE_NUMBER_KEY] = user.platNumber
             preferences[TOKEN_KEY] = token
             preferences[IS_LOGIN_KEY] = true
         }
@@ -53,6 +54,20 @@ class UserPreference(private val dataStore: DataStore<Preferences>) {
     fun getDriverId() : Int? {
         return runBlocking {
             dataStore.data.first()[DRIVER_ID]
+        }
+    }
+
+    // [Baru] Fungsi untuk mengambil nama
+    fun getName(): String? {
+        return runBlocking {
+            dataStore.data.first()[NAME_KEY]
+        }
+    }
+
+    // [Baru] Fungsi untuk mengambil email
+    fun getEmail(): String? {
+        return runBlocking {
+            dataStore.data.first()[EMAIL_KEY]
         }
     }
 

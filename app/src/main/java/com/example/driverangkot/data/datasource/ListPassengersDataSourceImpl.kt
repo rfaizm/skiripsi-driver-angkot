@@ -1,24 +1,23 @@
-package com.example.driverangkot.data.repository
+package com.example.driverangkot.data.datasource
 
 import android.util.Log
 import com.example.driverangkot.data.api.ApiService
 import com.example.driverangkot.data.api.dto.GetPlaceNameResponse
 import com.example.driverangkot.data.api.dto.ListPassengerResponse
-import com.example.driverangkot.data.datasource.ListPassengersDataSource
 import com.example.driverangkot.data.preference.UserPreference
-import com.example.driverangkot.domain.repository.ListPassengersRepository
-import retrofit2.HttpException
 
-class ListPassengersRepositoryImpl(
-    private val listPassengersDataSource: ListPassengersDataSource
-) : ListPassengersRepository {
+class ListPassengersDataSourceImpl(
+    private val apiService: ApiService,
+    private val userPreference: UserPreference
+) : ListPassengersDataSource {
 
-    private val TAG = "ListPassengersRepository"
+    private val TAG = "ListPassengersDataSource"
 
     override suspend fun getListPassengers(): ListPassengerResponse {
         try {
-            Log.d(TAG, "Fetching list passengers from DataSource")
-            return listPassengersDataSource.getListPassengers()
+            val token = userPreference.getAuthToken() ?: throw Exception("Token tidak ditemukan")
+            Log.d(TAG, "Fetching list passengers with token: Bearer $token")
+            return apiService.getListPassengers("Bearer $token")
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching list passengers: ${e.message}", e)
             throw e
@@ -27,8 +26,9 @@ class ListPassengersRepositoryImpl(
 
     override suspend fun getPlaceName(latitude: Double, longitude: Double): GetPlaceNameResponse {
         try {
-            Log.d(TAG, "Fetching place name from DataSource with lat=$latitude, long=$longitude")
-            return listPassengersDataSource.getPlaceName(latitude, longitude)
+            val token = userPreference.getAuthToken() ?: throw Exception("Token tidak ditemukan")
+            Log.d(TAG, "Fetching place name with lat=$latitude, long=$longitude")
+            return apiService.getPlaceName("Bearer $token", latitude, longitude)
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching place name: ${e.message}", e)
             throw e

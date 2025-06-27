@@ -13,7 +13,10 @@ import com.example.driverangkot.domain.usecase.angkot.ToOnlineUseCase
 import com.example.driverangkot.domain.usecase.listpassenger.GetListPassengersUseCase
 import com.example.driverangkot.domain.usecase.listpassenger.GetPlaceNameUseCase
 import com.example.driverangkot.domain.usecase.order.UpdateOrderStatusUseCase
+import com.example.driverangkot.domain.usecase.user.GetDriverSaldoUseCase
+import com.example.driverangkot.domain.usecase.user.GetHistoryUseCase
 import com.example.driverangkot.presentation.home.HomeViewModel
+import com.example.driverangkot.presentation.income.IncomeViewModel
 import com.example.driverangkot.presentation.listpassenger.ListPassengersViewModel
 import com.example.driverangkot.presentation.login.LoginViewModel
 import com.example.driverangkot.presentation.profile.ProfileViewModel
@@ -29,7 +32,9 @@ class ViewModelFactory private constructor(
     private val orderRepository: OrderRepository,
     private val getListPassengersUseCase: GetListPassengersUseCase, // [Baru]
     private val getPlaceNameUseCase: GetPlaceNameUseCase,
-    private val updateOrderStatusUseCase: UpdateOrderStatusUseCase
+    private val updateOrderStatusUseCase: UpdateOrderStatusUseCase,
+    private val getDriverSaldoUseCase: GetDriverSaldoUseCase,
+    private val getHistoryUseCase: GetHistoryUseCase
 ) : ViewModelProvider.NewInstanceFactory() {
 
     @Suppress("UNCHECKED_CAST")
@@ -42,13 +47,16 @@ class ViewModelFactory private constructor(
                 LoginViewModel(loginUseCase) as T
             }
             modelClass.isAssignableFrom(ProfileViewModel::class.java) -> {
-                ProfileViewModel(logoutUseCase) as T
+                ProfileViewModel(logoutUseCase, getHistoryUseCase) as T
             }
             modelClass.isAssignableFrom(HomeViewModel::class.java) -> {
                 HomeViewModel(getUserLocationUseCase, toOnlineUseCase, toOfflineUseCase, orderRepository) as T
             }
             modelClass.isAssignableFrom(ListPassengersViewModel::class.java) -> {
-                ListPassengersViewModel(getListPassengersUseCase, getPlaceNameUseCase, updateOrderStatusUseCase) as T // [Berubah]
+                ListPassengersViewModel(getListPassengersUseCase, getPlaceNameUseCase, updateOrderStatusUseCase) as T
+            }
+            modelClass.isAssignableFrom(IncomeViewModel::class.java) -> {
+                IncomeViewModel(getDriverSaldoUseCase) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
@@ -71,7 +79,9 @@ class ViewModelFactory private constructor(
                     Injection.provideOrderRepositoryUseCase(context),
                     Injection.provideGetListPassengersUseCase(context), // [Baru]
                     Injection.provideGetPlaceNameUseCase(context),
-                    Injection.provideUpdateOrderStatusUseCase(context)
+                    Injection.provideUpdateOrderStatusUseCase(context),
+                    Injection.provideGetDriverSaldoUseCase(context),
+                    Injection.provideGetHistoryUseCase(context)
                 )
             }.also { instance = it }
     }

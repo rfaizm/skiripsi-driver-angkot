@@ -2,60 +2,101 @@ package com.example.driverangkot.presentation.profile
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.example.driverangkot.data.preference.UserPreference
+import com.example.driverangkot.data.preference.dataStore
 import com.example.driverangkot.databinding.FragmentProfileBinding
 import com.example.driverangkot.di.ResultState
 import com.example.driverangkot.di.ViewModelFactory
+import com.example.driverangkot.presentation.adapter.HistoryAdapter
 import com.example.driverangkot.presentation.login.LoginActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class ProfileFragment : Fragment() {
 
     private var _binding: FragmentProfileBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
 
     private val profileViewModel by viewModels<ProfileViewModel> {
         ViewModelFactory.getInstance(requireContext())
     }
 
+    private val userPreference by lazy {
+        UserPreference.getInstance(requireContext().dataStore)
+    }
+
+    private lateinit var historyAdapter: HistoryAdapter
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-
         _binding = FragmentProfileBinding.inflate(inflater, container, false)
-        val root: View = binding.root
-
-
-        return root
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d(TAG, "onViewCreated: Initializing ProfileFragment")
+        setupUserProfile()
+        setupRecyclerView()
         observeLogoutState()
+        observeHistoryState()
         binding.logoutButton.setOnClickListener {
             profileViewModel.logout()
         }
+        // [Baru] Panggil getHistory saat fragment dimuat
+        profileViewModel.getHistory()
+    }
+
+    private fun setupUserProfile() {
+        val name = userPreference.getName()
+        val email = userPreference.getEmail()
+
+
+        Log.d(TAG, "User profile: name=$name, email=$email")
+
+        if (name != null) {
+            binding.fullname.text = name
+        } else {
+            Log.e(TAG, "Name not found in UserPreference")
+            binding.fullname.text = "Nama Tidak Ditemukan"
+        }
+
+        if (email != null) {
+            binding.gmailText.text = email
+        } else {
+            Log.e(TAG, "Email not found in UserPreference")
+            binding.gmailText.text = "Email Tidak Ditemukan"
+        }
+    }
+
+    // [Baru] Setup RecyclerView
+    private fun setupRecyclerView() {
+        historyAdapter = HistoryAdapter()
+        binding.rvHistory.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvHistory.adapter = historyAdapter
     }
 
     private fun observeLogoutState() {
         profileViewModel.logoutState.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is ResultState.Loading -> {
+                    Log.d(TAG, "Logging out, showing loading")
                     binding.logoutButton.isEnabled = false
                     showLoading(true)
                 }
                 is ResultState.Success -> {
+                    Log.d(TAG, "Logout successful")
                     binding.logoutButton.isEnabled = true
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle("Berhasil!")
@@ -70,9 +111,38 @@ class ProfileFragment : Fragment() {
                     showLoading(false)
                 }
                 is ResultState.Error -> {
+                    Log.e(TAG, "Error logging out: ${state.error}")
                     binding.logoutButton.isEnabled = true
                     Toast.makeText(requireContext(), state.error, Toast.LENGTH_LONG).show()
                     showLoading(false)
+                }
+            }
+        }
+    }
+
+    // [Baru] Observe history state
+    private fun observeHistoryState() {
+        profileViewModel.historyState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is ResultState.Loading -> {
+                    Log.d(TAG, "Loading history")
+                    showLoading(true)
+                }
+                is ResultState.Success -> {
+                    Log.d(TAG, "History fetched: ${state.data.data}")
+                    showLoading(false)
+                    state.data.data?.let { historyList ->
+                        historyAdapter.submitList(historyList.filterNotNull())
+                    } ?: run {
+                        Log.e(TAG, "History data is null")
+                        historyAdapter.submitList(emptyList())
+                    }
+                }
+                is ResultState.Error -> {
+                    Log.e(TAG, "Error fetching history: ${state.error}")
+                    showLoading(false)
+                    Toast.makeText(requireContext(), "Gagal mengambil history: ${state.error}", Toast.LENGTH_SHORT).show()
+                    historyAdapter.submitList(emptyList())
                 }
             }
         }
@@ -85,5 +155,9 @@ class ProfileFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val TAG = "ProfileFragment"
     }
 }
