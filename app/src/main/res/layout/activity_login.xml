@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="46dp"
-        android:text="Nama Logo"
+        android:text="SopirKu"
         android:textSize="32sp"
         app:layout_constraintStart_toEndOf="@+id/imageView"
         app:layout_constraintTop_toTopOf="parent" />

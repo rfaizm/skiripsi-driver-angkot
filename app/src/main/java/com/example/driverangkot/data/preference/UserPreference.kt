@@ -77,6 +77,12 @@ class UserPreference(private val dataStore: DataStore<Preferences>) {
         }
     }
 
+    fun getTrayekId(): Int? {
+        return runBlocking {
+            dataStore.data.first()[TRAYEK_ID]
+        }
+    }
+
     suspend fun logout() {
         dataStore.edit { preferences ->
             preferences.clear()

@@ -209,8 +209,8 @@ class PusherService : Service() {
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Pesanan Baru (#$orderId)")
-            .setContentText("Trayek: $trayekName, Penumpang: $passengers, Harga: Rp ${DecimalFormat("#,###").format(price)}") // [Berubah] Gunakan DecimalFormat
+            .setContentTitle("Terdapat Pesanan Baru")
+            .setContentText("Penumpang: $passengers, Harga: Rp ${DecimalFormat("#,###").format(price)}") // [Berubah] Gunakan DecimalFormat
             .setPriority(NotificationCompat.PRIORITY_HIGH) // [Berubah] Gunakan PRIORITY_HIGH untuk kompatibilitas
             .setAutoCancel(true)
             .build()

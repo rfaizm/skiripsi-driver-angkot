@@ -14,6 +14,7 @@ import com.example.driverangkot.data.api.dto.UpdateLocationResponse
 import com.example.driverangkot.data.api.dto.UpdateOrderStatusResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import retrofit2.Response
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -39,7 +40,7 @@ interface ApiService {
         @Part ktp: MultipartBody.Part,
         @Part sim: MultipartBody.Part,
         @Part stnk: MultipartBody.Part
-    ): RegisterSuccessResponse
+    ): Response<RegisterSuccessResponse>
 
     @FormUrlEncoded
     @POST("login")

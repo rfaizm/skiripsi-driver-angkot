@@ -9,8 +9,11 @@ import com.example.driverangkot.data.api.dto.RegisterSuccessResponse
 import com.example.driverangkot.data.api.dto.SaldoDriverResponse
 import com.example.driverangkot.data.preference.UserPreference
 import com.example.driverangkot.domain.entity.User
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import retrofit2.HttpException
 
 class UserDataSourceImpl(
     private val apiService: ApiService,
@@ -34,7 +37,23 @@ class UserDataSourceImpl(
     ): RegisterSuccessResponse {
         try {
             Log.d(TAG, "Calling register")
-            return apiService.register(fullName, noHp, noHpEmergency, email, trayekId, noPlat, password, selfPhoto, ktp, sim, stnk)
+            val response = apiService.register(fullName, noHp, noHpEmergency, email, trayekId, noPlat, password, selfPhoto, ktp, sim, stnk)
+            if (response.isSuccessful) {
+                return response.body() ?: throw Exception("Respons kosong dari server")
+            } else {
+                // [Baru] Tangani error 422
+                if (response.code() == 422) {
+                    val errorBody = response.errorBody()?.string()
+                    val errorJson = Gson().fromJson(errorBody, JsonObject::class.java)
+                    val errorMessage = errorJson.get("message")?.asString ?: "Validasi gagal"
+                    val errors = errorJson.getAsJsonObject("errors")
+                    val detailedError = errors?.entrySet()?.joinToString(", ") { entry ->
+                        entry.value.asJsonArray.joinToString(", ") { it.asString }
+                    } ?: errorMessage
+                    throw Exception(detailedError)
+                }
+                throw HttpException(response)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error in register: ${e.message}", e)
             throw e

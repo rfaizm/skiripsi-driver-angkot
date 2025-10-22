@@ -285,11 +285,6 @@ class HomeFragment : Fragment(), LocationPermissionListener {
                     val latLng = state.data
                     userLatitude = latLng.latitude
                     userLongitude = latLng.longitude
-                    Toast.makeText(
-                        requireContext(),
-                        "Lokasi: Lat=${latLng.latitude}, Lng=${latLng.longitude}",
-                        Toast.LENGTH_LONG
-                    ).show()
                     val mapsFragment = childFragmentManager.findFragmentById(R.id.map_driver) as? MapsFragment
                     mapsFragment?.animateCameraToLocation(latLng.latitude, latLng.longitude)
                     startLocationUpdates()

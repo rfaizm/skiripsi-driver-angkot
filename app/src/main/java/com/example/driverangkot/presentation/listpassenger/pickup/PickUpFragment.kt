@@ -19,6 +19,7 @@ import com.example.driverangkot.presentation.adapter.ListPassengerAdapter
 import com.example.driverangkot.domain.entity.Passenger
 import com.example.driverangkot.presentation.listpassenger.ListPassengerActivity
 import com.example.driverangkot.presentation.listpassenger.ListPassengersViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 
 
@@ -53,18 +54,46 @@ class PickUpFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume: Fetching passengers for PickUpFragment")
-        viewModel.fetchPassengers() // [Baru] Refresh data saat fragment aktif
+        viewModel.fetchPassengers() // Refresh data saat fragment aktif
     }
 
     private fun setupRecyclerView() {
-        adapter = ListPassengerAdapter(emptyList()) { passenger ->
-            Log.d(TAG, "Slide completed for passenger: orderId=${passenger.orderId}")
-            viewModel.updateOrderStatus(passenger.orderId, "selesai")
-        }
+        adapter = ListPassengerAdapter(
+            emptyList(),
+            onSlideComplete = { passenger ->
+                Log.d(TAG, "Slide completed for passenger: orderId=${passenger.orderId}, methodPayment=${passenger.methodPayment}")
+                if (passenger.methodPayment.lowercase() == "tunai") {
+                    showPaymentConfirmationDialog(passenger)
+                } else {
+                    viewModel.updateOrderStatus(passenger.orderId, "selesai")
+                }
+            },
+            isWaitingFragment = false, // 👈 tombol cancel disembunyikan
+            onCancelClicked = {} // 👈 tidak perlu aksi di sini
+        )
         binding.rvListPickupPassenger.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = this@PickUpFragment.adapter
         }
+    }
+
+    private fun showPaymentConfirmationDialog(passenger: Passenger) {
+        val position = adapter.passengers.indexOf(passenger)
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Konfirmasi Pembayaran")
+            .setMessage("Pastikan anda sudah menerima pembayaran secara tunai")
+            .setPositiveButton("Sudah") { _, _ ->
+                Log.d(TAG, "Confirmed payment for orderId=${passenger.orderId}")
+                viewModel.updateOrderStatus(passenger.orderId, "selesai")
+            }
+            .setNegativeButton("Belum") { _, _ ->
+                Log.d(TAG, "Payment not confirmed, resetting slider for orderId=${passenger.orderId}")
+                if (position != -1) {
+                    adapter.resetSliderAtPosition(position)
+                }
+            }
+            .setCancelable(false)
+            .show()
     }
 
     private fun observePassengers() {

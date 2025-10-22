@@ -39,24 +39,50 @@
             android:id="@+id/slide_is_done"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="8dp"
             android:elevation="4dp"
             app:border_radius="16dp"
             app:bounce_on_start="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/number_handphone"
+            app:layout_constraintTop_toBottomOf="@+id/button_cancel"
             app:outer_color="@color/colorPrimary"
             app:text="Penumpang sampai" />
 
         <TextView
             android:id="@+id/tujuan_text"
             style="@style/textMedium"
-            android:layout_width="wrap_content"
-            android:layout_height="71dp"
+            android:layout_width="0dp"
+            android:layout_height="72dp"
+            android:layout_marginStart="16dp"
             android:text="PHH. Mustofa 02"
+            android:textAlignment="textEnd"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/fullname_passenger"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/methodPayment"
+            style="@style/textMedium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Tunai"
+            android:textSize="16sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/number_handphone" />
+
+        <Button
+            android:id="@+id/button_cancel"
+            style="@style/textButton"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:backgroundTint="@color/red"
+            android:text="Batalkan"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/methodPayment" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

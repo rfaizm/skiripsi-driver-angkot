@@ -5,5 +5,7 @@ data class Passenger(
     val name: String,
     val phone: String,
     val placeName: String,
-    val isDone: Boolean = false // Placeholder untuk SlideToActView
+    val methodPayment: String,
+    val isDone: Boolean = false,
+    val distance: Double = Double.MAX_VALUE // Tambahkan properti distance
 )

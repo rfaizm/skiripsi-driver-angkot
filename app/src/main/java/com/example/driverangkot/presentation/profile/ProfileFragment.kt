@@ -18,6 +18,7 @@ import com.example.driverangkot.di.ResultState
 import com.example.driverangkot.di.ViewModelFactory
 import com.example.driverangkot.presentation.adapter.HistoryAdapter
 import com.example.driverangkot.presentation.login.LoginActivity
+import com.example.driverangkot.utils.Utils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class ProfileFragment : Fragment() {
@@ -61,10 +62,11 @@ class ProfileFragment : Fragment() {
     private fun setupUserProfile() {
         val name = userPreference.getName()
         val email = userPreference.getEmail()
+        val trayekId = userPreference.getTrayekId()
 
+        Log.d(TAG, "User profile: name=$name, email=$email, trayekId=$trayekId")
 
-        Log.d(TAG, "User profile: name=$name, email=$email")
-
+        // Bind nama ke TextView
         if (name != null) {
             binding.fullname.text = name
         } else {
@@ -72,11 +74,19 @@ class ProfileFragment : Fragment() {
             binding.fullname.text = "Nama Tidak Ditemukan"
         }
 
+        // Bind email ke TextView
         if (email != null) {
             binding.gmailText.text = email
         } else {
             Log.e(TAG, "Email not found in UserPreference")
             binding.gmailText.text = "Email Tidak Ditemukan"
+        }
+
+        // Bind nama trayek ke TextView
+        val trayekName = Utils.getTrayekName(requireContext(), trayekId.toString())
+        binding.trayekName.text = trayekName
+        if (trayekName == "Trayek Tidak Ditemukan") {
+            Log.e(TAG, "Trayek ID not found or invalid in UserPreference: $trayekId")
         }
     }
 
@@ -128,25 +138,46 @@ class ProfileFragment : Fragment() {
                     Log.d(TAG, "Loading history")
                     showLoading(true)
                 }
+
                 is ResultState.Success -> {
                     Log.d(TAG, "History fetched: ${state.data.data}")
                     showLoading(false)
-                    state.data.data?.let { historyList ->
-                        historyAdapter.submitList(historyList.filterNotNull())
-                    } ?: run {
-                        Log.e(TAG, "History data is null")
-                        historyAdapter.submitList(emptyList())
+
+                    val historyList = state.data.data?.filterNotNull() ?: emptyList()
+
+                    if (historyList.isEmpty()) {
+                        binding.historyEmpty.visibility = View.VISIBLE
+                        binding.textHistoryEmpty.visibility = View.VISIBLE
+                        binding.rvHistory.visibility = View.GONE
+                    } else {
+                        binding.historyEmpty.visibility = View.GONE
+                        binding.textHistoryEmpty.visibility = View.GONE
+                        binding.rvHistory.visibility = View.VISIBLE
+
+                        historyAdapter.submitList(historyList)
                     }
                 }
+
                 is ResultState.Error -> {
                     Log.e(TAG, "Error fetching history: ${state.error}")
                     showLoading(false)
-                    Toast.makeText(requireContext(), "Gagal mengambil history: ${state.error}", Toast.LENGTH_SHORT).show()
+
+                    binding.historyEmpty.visibility = View.VISIBLE
+                    binding.textHistoryEmpty.visibility = View.VISIBLE
+                    binding.rvHistory.visibility = View.GONE
+
+                    Toast.makeText(
+                        requireContext(),
+                        "Gagal mengambil history: ${state.error}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
                     historyAdapter.submitList(emptyList())
                 }
             }
         }
     }
+
 
     private fun showLoading(isLoading: Boolean) {
         binding.progressIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE

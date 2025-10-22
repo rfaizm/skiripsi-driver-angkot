@@ -1,10 +1,11 @@
 <resources>
-    <string name="app_name">Driver Angkot</string>
+    <string name="app_name">SopirKu</string>
     <string name="title_home">Home</string>
     <string name="title_income">Pendapatan</string>
     <string name="title_profile">Profile</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_tranfer_two">Pilih Bank Untuk Ditransfer</string>
 
     <string-array name="trayeks">
         <item>182:Abdul Muis - Cicaheum via Binong</item>

@@ -1,6 +1,7 @@
 package com.example.driverangkot.presentation.adapter
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.driverangkot.databinding.ItemListPassengerBinding
@@ -8,8 +9,10 @@ import com.example.driverangkot.domain.entity.Passenger
 import com.ncorti.slidetoact.SlideToActView
 
 class ListPassengerAdapter(
-    private var passengers: List<Passenger>,
-    private val onSlideComplete: (Passenger) -> Unit // [Baru] Callback untuk event geser
+    var passengers: List<Passenger>,
+    private val onSlideComplete: (Passenger) -> Unit,
+    private val isWaitingFragment: Boolean, // 👈 tambahan parameter
+    private val onCancelClicked: (Passenger) -> Unit // 👈 callback baru
 ) : RecyclerView.Adapter<ListPassengerAdapter.PassengerViewHolder>() {
 
     inner class PassengerViewHolder(
@@ -20,14 +23,29 @@ class ListPassengerAdapter(
             binding.fullnamePassenger.text = passenger.name
             binding.numberHandphone.text = passenger.phone
             binding.tujuanText.text = passenger.placeName
+            binding.methodPayment.text = passenger.methodPayment.replaceFirstChar { it.uppercase() }
+
+            // 👇 tampilkan atau sembunyikan tombol cancel tergantung fragment
+            binding.buttonCancel.visibility = if (isWaitingFragment) View.VISIBLE else View.GONE
+
+            // 👇 klik tombol cancel
+            binding.buttonCancel.setOnClickListener {
+                onCancelClicked(passenger)
+            }
+
+            // Setup slider
             binding.slideIsDone.isLocked = passenger.isDone
-            binding.slideIsDone.isEnabled = !passenger.isDone // [Berubah] Aktifkan jika belum done
-            binding.slideIsDone.resetSlider() // [Baru] Reset slider saat bind
+            binding.slideIsDone.isEnabled = !passenger.isDone
+            binding.slideIsDone.resetSlider()
             binding.slideIsDone.onSlideCompleteListener = object : SlideToActView.OnSlideCompleteListener {
                 override fun onSlideComplete(view: SlideToActView) {
                     onSlideComplete(passenger)
                 }
             }
+        }
+
+        fun resetSlider() {
+            binding.slideIsDone.resetSlider()
         }
     }
 
@@ -49,5 +67,11 @@ class ListPassengerAdapter(
     fun updatePassengers(newPassengers: List<Passenger>) {
         passengers = newPassengers
         notifyDataSetChanged()
+    }
+
+    fun resetSliderAtPosition(position: Int) {
+        if (position in 0 until itemCount) {
+            notifyItemChanged(position)
+        }
     }
 }

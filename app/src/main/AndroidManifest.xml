@@ -22,11 +22,15 @@
         android:theme="@style/Theme.DriverAngkot"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+        <activity
+            android:name=".presentation.transfertobank.TransferActivity"
+            android:exported="false" />
+
         <service
             android:name=".service.PusherService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync"/>
+            android:foregroundServiceType="dataSync" />
         <service
             android:name=".service.LocationUpdateService"
             android:enabled="true"

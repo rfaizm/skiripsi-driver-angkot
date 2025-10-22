@@ -53,7 +53,7 @@ class ViewModelFactory private constructor(
                 HomeViewModel(getUserLocationUseCase, toOnlineUseCase, toOfflineUseCase, orderRepository) as T
             }
             modelClass.isAssignableFrom(ListPassengersViewModel::class.java) -> {
-                ListPassengersViewModel(getListPassengersUseCase, getPlaceNameUseCase, updateOrderStatusUseCase) as T
+                ListPassengersViewModel(getListPassengersUseCase, getPlaceNameUseCase, updateOrderStatusUseCase, getUserLocationUseCase) as T
             }
             modelClass.isAssignableFrom(IncomeViewModel::class.java) -> {
                 IncomeViewModel(getDriverSaldoUseCase) as T

@@ -43,11 +43,17 @@ data class WaitingItemJSON(
 	@field:SerializedName("starting_point_long")
 	val startingPointLong: String? = null,
 
+	@field:SerializedName("payment_method")
+	val methodPayment: String? = null,
+
 	@field:SerializedName("destination_point_long")
 	val destinationPointLong: String? = null
 )
 
 data class PickedUpItemJSON(
+
+	@field:SerializedName("payment_method")
+	val methodPayment: String? = null,
 
 	@field:SerializedName("number_of_passengers")
 	val numberOfPassengers: Int? = null,

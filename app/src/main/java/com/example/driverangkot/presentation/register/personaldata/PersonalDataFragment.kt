@@ -3,6 +3,7 @@ package com.example.driverangkot.presentation.register.personaldata
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.widget.Toast
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
@@ -117,14 +118,20 @@ class PersonalDataFragment : Fragment() {
     private fun setupButton() {
         binding.buttonNext.setOnClickListener {
             if (validateInputs()) {
+                val noHp = binding.inputNoHpActive.text.toString().trim()
+                val noHpEmergency = binding.inputNoHpEmergency.text.toString().trim()
+                if (noHp == noHpEmergency) {
+                    Toast.makeText(requireContext(), "Nomor HP aktif dan darurat tidak boleh sama", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 val selectedTrayek = trayekList.find {
                     it.name == binding.inputRouteAngkot.text.toString().trim()
                 }
                 val documentFragment = DocumentFragment.newInstance()
                 val bundle = Bundle().apply {
                     putString("fullname", binding.inputFullname.text.toString().trim())
-                    putString("noHp", binding.inputNoHpActive.text.toString().trim())
-                    putString("noHpEmergency", binding.inputNoHpEmergency.text.toString().trim())
+                    putString("noHp", noHp)
+                    putString("noHpEmergency", noHpEmergency)
                     putString("email", binding.inputEmail.text.toString().trim())
                     putString("password", binding.inputPassword.text.toString().trim())
                     putString("routeAngkot", selectedTrayek?.id ?: "")

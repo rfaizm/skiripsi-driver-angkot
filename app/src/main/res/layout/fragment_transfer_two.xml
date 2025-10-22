@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/transfer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".presentation.transfertobank.two.TransferTwoFragment">
+
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="@string/title_tranfer_two"
+        style="@style/textBold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <RadioGroup
+        android:id="@+id/radio_group_topup_right"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView">
+
+        <RadioButton
+            android:id="@+id/radio_button_bca"
+            style="@style/textReguler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:drawableStart="@drawable/bca_logo"
+            android:drawablePadding="8dp"
+            android:background="@drawable/radio_transfer"
+            android:button="@android:color/transparent"
+            android:elevation="4dp"
+            android:padding="16dp"
+            android:text="BCA"
+            android:textColor="@drawable/text_color_radio" />
+
+        <RadioButton
+            android:id="@+id/radio_button_bni"
+            style="@style/textReguler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:drawableStart="@drawable/bni_logo"
+            android:drawablePadding="8dp"
+            android:background="@drawable/radio_transfer"
+            android:button="@android:color/transparent"
+            android:elevation="4dp"
+            android:padding="16dp"
+            android:text="BNI"
+            android:textColor="@drawable/text_color_radio" />
+
+        <RadioButton
+            android:id="@+id/radio_button_mandiri"
+            style="@style/textReguler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:drawableStart="@drawable/mandiri_logo"
+            android:drawablePadding="8dp"
+            android:background="@drawable/radio_transfer"
+            android:button="@android:color/transparent"
+            android:elevation="4dp"
+            android:padding="16dp"
+            android:text="Mandiri"
+            android:textColor="@drawable/text_color_radio" />
+
+        <RadioButton
+            android:id="@+id/radio_button_bsi"
+            style="@style/textReguler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:drawableStart="@drawable/bsi_logo"
+            android:drawablePadding="8dp"
+            android:background="@drawable/radio_transfer"
+            android:button="@android:color/transparent"
+            android:elevation="4dp"
+            android:padding="16dp"
+            android:text="BSI"
+            android:textColor="@drawable/text_color_radio" />
+
+    </RadioGroup>
+
+
+    <Button
+        android:id="@+id/buttonConfirmationTwo"
+        style="@style/textButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/button_primary"
+        android:text="Konfirmasi"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

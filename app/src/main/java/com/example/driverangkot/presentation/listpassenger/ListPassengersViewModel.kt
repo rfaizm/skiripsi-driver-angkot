@@ -11,13 +11,16 @@ import com.example.driverangkot.di.ResultState
 import com.example.driverangkot.domain.entity.Passenger
 import com.example.driverangkot.domain.usecase.listpassenger.GetListPassengersUseCase
 import com.example.driverangkot.domain.usecase.listpassenger.GetPlaceNameUseCase
+import com.example.driverangkot.domain.usecase.location.GetUserLocationUseCase
 import com.example.driverangkot.domain.usecase.order.UpdateOrderStatusUseCase
+import com.example.driverangkot.utils.Utils
 import kotlinx.coroutines.launch
 
 class ListPassengersViewModel(
     private val getListPassengersUseCase: GetListPassengersUseCase,
     private val getPlaceNameUseCase: GetPlaceNameUseCase,
-    private val updateOrderStatusUseCase: UpdateOrderStatusUseCase
+    private val updateOrderStatusUseCase: UpdateOrderStatusUseCase,
+    private val getUserLocationUseCase: GetUserLocationUseCase
 ) : ViewModel() {
 
     private val TAG = "ListPassengersViewModel"
@@ -36,18 +39,24 @@ class ListPassengersViewModel(
         _pickedUpPassengersState.value = ResultState.Loading
 
         viewModelScope.launch {
+            // Ambil lokasi pengguna
+            val userLocationResult = getUserLocationUseCase()
+            val userLat = userLocationResult.getOrNull()?.latitude ?: 0.0
+            val userLon = userLocationResult.getOrNull()?.longitude ?: 0.0
+            Log.d(TAG, "User location: lat=$userLat, lon=$userLon")
+
             when (val result = getListPassengersUseCase()) {
                 is ResultState.Success -> {
                     val data = result.data.data
                     val waitingPassengers = data?.waiting?.mapNotNull { item ->
-                        item?.let { convertToPassenger(it, isWaiting = true) }
-                    } ?: emptyList()
+                        item?.let { convertToPassenger(it, isWaiting = true, userLat, userLon) }
+                    }?.sortedBy { it.distance } ?: emptyList() // Urutkan berdasarkan jarak terdekat
                     _waitingPassengersState.value = ResultState.Success(waitingPassengers)
                     Log.d(TAG, "Waiting passengers loaded: ${waitingPassengers.size}")
 
                     val pickedUpPassengers = data?.pickedUp?.mapNotNull { item ->
-                        item?.let { convertToPassenger(it, isWaiting = false) }
-                    } ?: emptyList()
+                        item?.let { convertToPassenger(it, isWaiting = false, userLat, userLon) }
+                    }?.sortedBy { it.distance } ?: emptyList() // Urutkan berdasarkan jarak terdekat
                     _pickedUpPassengersState.value = ResultState.Success(pickedUpPassengers)
                     Log.d(TAG, "Picked up passengers loaded: ${pickedUpPassengers.size}")
                 }
@@ -79,36 +88,22 @@ class ListPassengersViewModel(
         }
     }
 
-    private suspend fun convertToPassenger(item: WaitingItemJSON, isWaiting: Boolean): Passenger? {
+    private suspend fun convertToPassenger(item: WaitingItemJSON, isWaiting: Boolean, userLat: Double, userLon: Double): Passenger? {
         return try {
-            val lat = (if (isWaiting) item.startingPointLat else item.destinationPointLat)?.toDoubleOrNull()
-            val long = (if (isWaiting) item.startingPointLong else item.destinationPointLong)?.toDoubleOrNull()
+            val lat = (if (isWaiting) item.startingPointLat else item.destinationPointLat)?.toDoubleOrNull() ?: return null
+            val long = (if (isWaiting) item.startingPointLong else item.destinationPointLong)?.toDoubleOrNull() ?: return null
             Log.d(TAG, "Converting WaitingItem: orderId=${item.orderId}, lat=$lat, long=$long")
-            if (lat == null || long == null) {
-                Log.d(TAG, "Invalid coordinates for orderId=${item.orderId}: lat=${item.startingPointLat}, long=${item.startingPointLong}")
-                return Passenger(
-                    orderId = item.orderId ?: return null,
-                    name = item.passengerName ?: "Unknown",
-                    phone = item.passengerPhone ?: "Unknown",
-                    placeName = "Invalid Coordinates"
-                )
-            }
+
+            val distance = Utils.calculateDistance(userLat, userLon, lat, long)
+            Log.d(TAG, "Distance for orderId=${item.orderId}: $distance km")
 
             val result = getPlaceNameUseCase(lat, long)
             val placeName = when (result) {
                 is ResultState.Success -> {
                     val name = result.data.data?.placeName
-                    if (name.isNullOrEmpty()) {
-                        Log.d(TAG, "placeName is null or empty for lat=$lat, long=$long")
-                        "Unknown Location"
-                    } else {
-                        name
-                    }
+                    if (name.isNullOrEmpty()) "Unknown Location" else name
                 }
-                is ResultState.Error -> {
-                    Log.d(TAG, "Error getting place name for lat=$lat, long=$long: ${result.error}")
-                    "Unknown Location"
-                }
+                is ResultState.Error -> "Unknown Location"
                 is ResultState.Loading -> "Loading..."
             }
 
@@ -116,7 +111,9 @@ class ListPassengersViewModel(
                 orderId = item.orderId ?: return null,
                 name = item.passengerName ?: "Unknown",
                 phone = item.passengerPhone ?: "Unknown",
-                placeName = placeName
+                placeName = placeName,
+                methodPayment = item.methodPayment ?: "Unknown",
+                distance = distance // Tambahkan jarak ke objek Passenger
             )
         } catch (e: Exception) {
             Log.d(TAG, "Error converting WaitingItem orderId=${item.orderId}: ${e.message}")
@@ -124,41 +121,29 @@ class ListPassengersViewModel(
                 orderId = item.orderId ?: return null,
                 name = item.passengerName ?: "Unknown",
                 phone = item.passengerPhone ?: "Unknown",
-                placeName = "Unknown Location"
+                placeName = "Unknown Location",
+                methodPayment = item.methodPayment ?: "Unknown",
+                distance = Double.MAX_VALUE // Jarak default jika error
             )
         }
     }
 
-    private suspend fun convertToPassenger(item: PickedUpItemJSON, isWaiting: Boolean): Passenger? {
+    private suspend fun convertToPassenger(item: PickedUpItemJSON, isWaiting: Boolean, userLat: Double, userLon: Double): Passenger? {
         return try {
-            val lat = (if (isWaiting) item.startingPointLat else item.destinationPointLat)?.toDoubleOrNull()
-            val long = (if (isWaiting) item.startingPointLong else item.destinationPointLong)?.toDoubleOrNull()
+            val lat = (if (isWaiting) item.startingPointLat else item.destinationPointLat)?.toDoubleOrNull() ?: return null
+            val long = (if (isWaiting) item.startingPointLong else item.destinationPointLong)?.toDoubleOrNull() ?: return null
             Log.d(TAG, "Converting PickedUpItem: orderId=${item.orderId}, lat=$lat, long=$long")
-            if (lat == null || long == null) {
-                Log.d(TAG, "Invalid coordinates for orderId=${item.orderId}: lat=${item.startingPointLat}, long=${item.startingPointLong}")
-                return Passenger(
-                    orderId = item.orderId ?: return null,
-                    name = item.passengerName ?: "Unknown",
-                    phone = item.passengerPhone ?: "Unknown",
-                    placeName = "Invalid Coordinates"
-                )
-            }
+
+            val distance = Utils.calculateDistance(userLat, userLon, lat, long)
+            Log.d(TAG, "Distance for orderId=${item.orderId}: $distance km")
 
             val result = getPlaceNameUseCase(lat, long)
             val placeName = when (result) {
                 is ResultState.Success -> {
                     val name = result.data.data?.placeName
-                    if (name.isNullOrEmpty()) {
-                        Log.d(TAG, "placeName is null or empty for lat=$lat, long=$long")
-                        "Unknown Location"
-                    } else {
-                        name
-                    }
+                    if (name.isNullOrEmpty()) "Unknown Location" else name
                 }
-                is ResultState.Error -> {
-                    Log.d(TAG, "Error getting place name for lat=$lat, long=$long: ${result.error}")
-                    "Unknown Location"
-                }
+                is ResultState.Error -> "Unknown Location"
                 is ResultState.Loading -> "Loading..."
             }
 
@@ -166,7 +151,9 @@ class ListPassengersViewModel(
                 orderId = item.orderId ?: return null,
                 name = item.passengerName ?: "Unknown",
                 phone = item.passengerPhone ?: "Unknown",
-                placeName = placeName
+                placeName = placeName,
+                methodPayment = item.methodPayment ?: "Unknown",
+                distance = distance // Tambahkan jarak ke objek Passenger
             )
         } catch (e: Exception) {
             Log.d(TAG, "Error converting PickedUpItem orderId=${item.orderId}: ${e.message}")
@@ -174,7 +161,9 @@ class ListPassengersViewModel(
                 orderId = item.orderId ?: return null,
                 name = item.passengerName ?: "Unknown",
                 phone = item.passengerPhone ?: "Unknown",
-                placeName = "Unknown Location"
+                placeName = "Unknown Location",
+                methodPayment = item.methodPayment ?: "Unknown",
+                distance = Double.MAX_VALUE // Jarak default jika error
             )
         }
     }

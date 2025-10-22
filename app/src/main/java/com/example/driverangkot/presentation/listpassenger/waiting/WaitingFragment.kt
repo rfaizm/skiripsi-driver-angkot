@@ -19,6 +19,7 @@ import com.example.driverangkot.presentation.adapter.ListPassengerAdapter
 import com.example.driverangkot.domain.entity.Passenger
 import com.example.driverangkot.presentation.listpassenger.ListPassengerActivity
 import com.example.driverangkot.presentation.listpassenger.ListPassengersViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 
 
@@ -53,18 +54,38 @@ class WaitingFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume: Fetching passengers for WaitingFragment")
-        viewModel.fetchPassengers() // [Baru] Refresh data saat fragment aktif
+        viewModel.fetchPassengers() // Refresh data saat fragment aktif
     }
 
     private fun setupRecyclerView() {
-        adapter = ListPassengerAdapter(emptyList()) { passenger ->
-            Log.d(TAG, "Slide completed for passenger: orderId=${passenger.orderId}")
-            viewModel.updateOrderStatus(passenger.orderId, "dijemput")
-        }
+        adapter = ListPassengerAdapter(
+            emptyList(),
+            onSlideComplete = { passenger ->
+                Log.d(TAG, "Slide completed for passenger: orderId=${passenger.orderId}")
+                viewModel.updateOrderStatus(passenger.orderId, "dijemput")
+            },
+            isWaitingFragment = true, // 👈 tombol cancel tampil
+            onCancelClicked = { passenger ->
+                showCancelConfirmationDialog(passenger)
+            }
+        )
         binding.rvListWaitingPassenger.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = this@WaitingFragment.adapter
         }
+    }
+
+    private fun showCancelConfirmationDialog(passenger: Passenger) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Batalkan Pesanan")
+            .setMessage("Apakah Anda yakin ingin membatalkan pesanan ini?")
+            .setPositiveButton("Ya") { _, _ ->
+                //Log.d(TAG, "Pesanan dibatalkan: orderId=${passenger.orderId}")
+                //viewModel.updateOrderStatus(passenger.orderId, "dibatalkan")
+                Toast.makeText(requireContext(), "Pesanan telah dibatalkan", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Tidak", null)
+            .show()
     }
 
     private fun observePassengers() {
