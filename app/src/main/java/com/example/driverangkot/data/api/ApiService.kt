@@ -7,6 +7,7 @@ import com.example.driverangkot.data.api.dto.ListPassengerResponse
 import com.example.driverangkot.data.api.dto.LoginSuccessResponse
 import com.example.driverangkot.data.api.dto.LogoutResponse
 import com.example.driverangkot.data.api.dto.RegisterSuccessResponse
+import com.example.driverangkot.data.api.dto.ResponseCancelOrder
 import com.example.driverangkot.data.api.dto.SaldoDriverResponse
 import com.example.driverangkot.data.api.dto.ToOfflineResponse
 import com.example.driverangkot.data.api.dto.ToOnlineResponse
@@ -105,4 +106,11 @@ interface ApiService {
     suspend fun getHistory(
         @Header("Authorization") token: String,
     ) : HistoryResponse
+
+    @FormUrlEncoded
+    @POST("cancel-order-driver")
+    suspend fun cancelOrder(
+        @Header("Authorization") token: String,
+        @Field("order_id") orderId: String
+    ) : Response<ResponseCancelOrder>
 }

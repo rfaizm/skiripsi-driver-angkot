@@ -108,16 +108,10 @@ class ProfileFragment : Fragment() {
                 is ResultState.Success -> {
                     Log.d(TAG, "Logout successful")
                     binding.logoutButton.isEnabled = true
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("Berhasil!")
-                        .setMessage("Anda telah logout.")
-                        .setPositiveButton("OK") { _, _ ->
-                            val intent = Intent(requireContext(), LoginActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-                            startActivity(intent)
-                            requireActivity().finish()
-                        }
-                        .show()
+                    val intent = Intent(requireContext(), LoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                    startActivity(intent)
+                    requireActivity().finish()
                     showLoading(false)
                 }
                 is ResultState.Error -> {

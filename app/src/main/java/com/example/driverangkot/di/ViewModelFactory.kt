@@ -12,6 +12,7 @@ import com.example.driverangkot.domain.usecase.user.RegisterUseCase
 import com.example.driverangkot.domain.usecase.angkot.ToOnlineUseCase
 import com.example.driverangkot.domain.usecase.listpassenger.GetListPassengersUseCase
 import com.example.driverangkot.domain.usecase.listpassenger.GetPlaceNameUseCase
+import com.example.driverangkot.domain.usecase.order.CancelOrderUseCase
 import com.example.driverangkot.domain.usecase.order.UpdateOrderStatusUseCase
 import com.example.driverangkot.domain.usecase.user.GetDriverSaldoUseCase
 import com.example.driverangkot.domain.usecase.user.GetHistoryUseCase
@@ -34,7 +35,8 @@ class ViewModelFactory private constructor(
     private val getPlaceNameUseCase: GetPlaceNameUseCase,
     private val updateOrderStatusUseCase: UpdateOrderStatusUseCase,
     private val getDriverSaldoUseCase: GetDriverSaldoUseCase,
-    private val getHistoryUseCase: GetHistoryUseCase
+    private val getHistoryUseCase: GetHistoryUseCase,
+    private val cancelOrderUseCase: CancelOrderUseCase // [Baru]
 ) : ViewModelProvider.NewInstanceFactory() {
 
     @Suppress("UNCHECKED_CAST")
@@ -53,7 +55,8 @@ class ViewModelFactory private constructor(
                 HomeViewModel(getUserLocationUseCase, toOnlineUseCase, toOfflineUseCase, orderRepository) as T
             }
             modelClass.isAssignableFrom(ListPassengersViewModel::class.java) -> {
-                ListPassengersViewModel(getListPassengersUseCase, getPlaceNameUseCase, updateOrderStatusUseCase, getUserLocationUseCase) as T
+                ListPassengersViewModel(getListPassengersUseCase, getPlaceNameUseCase, updateOrderStatusUseCase, getUserLocationUseCase,
+                    cancelOrderUseCase) as T
             }
             modelClass.isAssignableFrom(IncomeViewModel::class.java) -> {
                 IncomeViewModel(getDriverSaldoUseCase) as T
@@ -81,7 +84,8 @@ class ViewModelFactory private constructor(
                     Injection.provideGetPlaceNameUseCase(context),
                     Injection.provideUpdateOrderStatusUseCase(context),
                     Injection.provideGetDriverSaldoUseCase(context),
-                    Injection.provideGetHistoryUseCase(context)
+                    Injection.provideGetHistoryUseCase(context),
+                    Injection.provideCancelOrderUseCase(context) // [Baru]
                 )
             }.also { instance = it }
     }

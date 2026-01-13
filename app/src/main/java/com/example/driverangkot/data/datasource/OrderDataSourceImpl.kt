@@ -7,10 +7,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.driverangkot.data.api.ApiService
+import com.example.driverangkot.data.api.dto.ResponseCancelOrder
 import com.example.driverangkot.data.api.dto.UpdateOrderStatusResponse
 import com.example.driverangkot.data.preference.UserPreference
 import com.example.driverangkot.domain.entity.OrderData
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -82,4 +84,26 @@ class OrderDataSourceImpl(
             throw e
         }
     }
+
+    override suspend fun cancelOrder(orderId: Int): ResponseCancelOrder {
+        try {
+            val token = userPreference.getAuthToken() ?: throw Exception("Token tidak ditemukan")
+            Log.d(TAG, "Canceling order: orderId=$orderId, token=Bearer $token")
+            val response = apiService.cancelOrder("Bearer $token", orderId.toString())
+            if (response.isSuccessful) {
+                return response.body() ?: throw Exception("Respons kosong dari server")
+            } else {
+                // [Baru] Tangani error dari server
+                val errorBody = response.errorBody()?.string()
+                val errorJson = gson.fromJson(errorBody, JsonObject::class.java)
+                val errorMessage = errorJson?.get("message")?.asString ?: "Terjadi kesalahan saat membatalkan pesanan"
+                val errorDetail = errorJson?.get("error")?.asString ?: errorMessage
+                throw Exception(errorDetail)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error canceling order: ${e.message}", e)
+            throw e
+        }
+    }
+
 }

@@ -6,12 +6,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.driverangkot.data.api.dto.PickedUpItemJSON
+import com.example.driverangkot.data.api.dto.ResponseCancelOrder
 import com.example.driverangkot.data.api.dto.WaitingItemJSON
 import com.example.driverangkot.di.ResultState
 import com.example.driverangkot.domain.entity.Passenger
 import com.example.driverangkot.domain.usecase.listpassenger.GetListPassengersUseCase
 import com.example.driverangkot.domain.usecase.listpassenger.GetPlaceNameUseCase
 import com.example.driverangkot.domain.usecase.location.GetUserLocationUseCase
+import com.example.driverangkot.domain.usecase.order.CancelOrderUseCase
 import com.example.driverangkot.domain.usecase.order.UpdateOrderStatusUseCase
 import com.example.driverangkot.utils.Utils
 import kotlinx.coroutines.launch
@@ -20,7 +22,8 @@ class ListPassengersViewModel(
     private val getListPassengersUseCase: GetListPassengersUseCase,
     private val getPlaceNameUseCase: GetPlaceNameUseCase,
     private val updateOrderStatusUseCase: UpdateOrderStatusUseCase,
-    private val getUserLocationUseCase: GetUserLocationUseCase
+    private val getUserLocationUseCase: GetUserLocationUseCase,
+    private val cancelOrderUseCase: CancelOrderUseCase // [Baru]
 ) : ViewModel() {
 
     private val TAG = "ListPassengersViewModel"
@@ -34,12 +37,14 @@ class ListPassengersViewModel(
     private val _updateStatusState = MutableLiveData<ResultState<Unit>>()
     val updateStatusState: LiveData<ResultState<Unit>> get() = _updateStatusState
 
+    private val _cancelOrderState = MutableLiveData<ResultState<ResponseCancelOrder>>() // [Baru]
+    val cancelOrderState: LiveData<ResultState<ResponseCancelOrder>> get() = _cancelOrderState // [Baru]
+
     fun fetchPassengers() {
         _waitingPassengersState.value = ResultState.Loading
         _pickedUpPassengersState.value = ResultState.Loading
 
         viewModelScope.launch {
-            // Ambil lokasi pengguna
             val userLocationResult = getUserLocationUseCase()
             val userLat = userLocationResult.getOrNull()?.latitude ?: 0.0
             val userLon = userLocationResult.getOrNull()?.longitude ?: 0.0
@@ -50,13 +55,13 @@ class ListPassengersViewModel(
                     val data = result.data.data
                     val waitingPassengers = data?.waiting?.mapNotNull { item ->
                         item?.let { convertToPassenger(it, isWaiting = true, userLat, userLon) }
-                    }?.sortedBy { it.distance } ?: emptyList() // Urutkan berdasarkan jarak terdekat
+                    }?.sortedBy { it.distance } ?: emptyList()
                     _waitingPassengersState.value = ResultState.Success(waitingPassengers)
                     Log.d(TAG, "Waiting passengers loaded: ${waitingPassengers.size}")
 
                     val pickedUpPassengers = data?.pickedUp?.mapNotNull { item ->
                         item?.let { convertToPassenger(it, isWaiting = false, userLat, userLon) }
-                    }?.sortedBy { it.distance } ?: emptyList() // Urutkan berdasarkan jarak terdekat
+                    }?.sortedBy { it.distance } ?: emptyList()
                     _pickedUpPassengersState.value = ResultState.Success(pickedUpPassengers)
                     Log.d(TAG, "Picked up passengers loaded: ${pickedUpPassengers.size}")
                 }
@@ -77,7 +82,7 @@ class ListPassengersViewModel(
                 is ResultState.Success -> {
                     _updateStatusState.value = ResultState.Success(Unit)
                     Log.d(TAG, "Order status updated: orderId=$orderId, status=$status")
-                    fetchPassengers() // Refresh data setelah update
+                    fetchPassengers()
                 }
                 is ResultState.Error -> {
                     _updateStatusState.value = ResultState.Error(result.error)
@@ -87,6 +92,29 @@ class ListPassengersViewModel(
             }
         }
     }
+
+    fun cancelOrder(orderId: Int) {
+        _cancelOrderState.value = ResultState.Loading
+        viewModelScope.launch {
+            val result = cancelOrderUseCase(orderId)
+            if (result.isSuccess) {
+                val data = result.getOrNull()
+                if (data != null) {
+                    _cancelOrderState.value = ResultState.Success(data)
+                    Log.d(TAG, "Order canceled: orderId=$orderId")
+                    fetchPassengers() // Refresh daftar penumpang setelah pembatalan
+                } else {
+                    _cancelOrderState.value = ResultState.Error("Respons pembatalan kosong")
+                    Log.e(TAG, "Error canceling order: Response data is null")
+                }
+            } else {
+                val errorMessage = result.exceptionOrNull()?.message ?: "Gagal membatalkan pesanan"
+                _cancelOrderState.value = ResultState.Error(errorMessage)
+                Log.e(TAG, "Error canceling order: $errorMessage")
+            }
+        }
+    }
+
 
     private suspend fun convertToPassenger(item: WaitingItemJSON, isWaiting: Boolean, userLat: Double, userLon: Double): Passenger? {
         return try {
@@ -113,7 +141,7 @@ class ListPassengersViewModel(
                 phone = item.passengerPhone ?: "Unknown",
                 placeName = placeName,
                 methodPayment = item.methodPayment ?: "Unknown",
-                distance = distance // Tambahkan jarak ke objek Passenger
+                distance = distance
             )
         } catch (e: Exception) {
             Log.d(TAG, "Error converting WaitingItem orderId=${item.orderId}: ${e.message}")
@@ -123,7 +151,7 @@ class ListPassengersViewModel(
                 phone = item.passengerPhone ?: "Unknown",
                 placeName = "Unknown Location",
                 methodPayment = item.methodPayment ?: "Unknown",
-                distance = Double.MAX_VALUE // Jarak default jika error
+                distance = Double.MAX_VALUE
             )
         }
     }
@@ -153,7 +181,7 @@ class ListPassengersViewModel(
                 phone = item.passengerPhone ?: "Unknown",
                 placeName = placeName,
                 methodPayment = item.methodPayment ?: "Unknown",
-                distance = distance // Tambahkan jarak ke objek Passenger
+                distance = distance
             )
         } catch (e: Exception) {
             Log.d(TAG, "Error converting PickedUpItem orderId=${item.orderId}: ${e.message}")
@@ -163,7 +191,7 @@ class ListPassengersViewModel(
                 phone = item.passengerPhone ?: "Unknown",
                 placeName = "Unknown Location",
                 methodPayment = item.methodPayment ?: "Unknown",
-                distance = Double.MAX_VALUE // Jarak default jika error
+                distance = Double.MAX_VALUE
             )
         }
     }

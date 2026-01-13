@@ -28,6 +28,7 @@ import com.example.driverangkot.domain.usecase.angkot.ToOnlineUseCase
 import com.example.driverangkot.domain.usecase.angkot.UpdateLocationUseCase
 import com.example.driverangkot.domain.usecase.listpassenger.GetListPassengersUseCase
 import com.example.driverangkot.domain.usecase.listpassenger.GetPlaceNameUseCase
+import com.example.driverangkot.domain.usecase.order.CancelOrderUseCase
 import com.example.driverangkot.domain.usecase.order.UpdateOrderStatusUseCase
 import com.example.driverangkot.domain.usecase.user.GetDriverSaldoUseCase
 import com.example.driverangkot.domain.usecase.user.GetHistoryUseCase
@@ -116,5 +117,8 @@ object Injection {
 
     fun provideGetHistoryUseCase(context: Context): GetHistoryUseCase {
         return GetHistoryUseCase(provideUserRepository(context))
+    }
+    fun provideCancelOrderUseCase(context: Context): CancelOrderUseCase { // [Baru]
+        return CancelOrderUseCase(provideOrderRepository(context))
     }
 }

@@ -20,6 +20,7 @@ import com.example.driverangkot.domain.entity.Passenger
 import com.example.driverangkot.presentation.listpassenger.ListPassengerActivity
 import com.example.driverangkot.presentation.listpassenger.ListPassengersViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 
 
@@ -49,12 +50,13 @@ class WaitingFragment : Fragment() {
         setupRecyclerView()
         observePassengers()
         observeUpdateStatus()
+        observeCancelOrder() // [Baru]
     }
 
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume: Fetching passengers for WaitingFragment")
-        viewModel.fetchPassengers() // Refresh data saat fragment aktif
+        viewModel.fetchPassengers()
     }
 
     private fun setupRecyclerView() {
@@ -64,7 +66,7 @@ class WaitingFragment : Fragment() {
                 Log.d(TAG, "Slide completed for passenger: orderId=${passenger.orderId}")
                 viewModel.updateOrderStatus(passenger.orderId, "dijemput")
             },
-            isWaitingFragment = true, // 👈 tombol cancel tampil
+            isWaitingFragment = true,
             onCancelClicked = { passenger ->
                 showCancelConfirmationDialog(passenger)
             }
@@ -80,9 +82,8 @@ class WaitingFragment : Fragment() {
             .setTitle("Batalkan Pesanan")
             .setMessage("Apakah Anda yakin ingin membatalkan pesanan ini?")
             .setPositiveButton("Ya") { _, _ ->
-                //Log.d(TAG, "Pesanan dibatalkan: orderId=${passenger.orderId}")
-                //viewModel.updateOrderStatus(passenger.orderId, "dibatalkan")
-                Toast.makeText(requireContext(), "Pesanan telah dibatalkan", Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "Cancel confirmed: orderId=${passenger.orderId}")
+                viewModel.cancelOrder(passenger.orderId) // [Baru] Panggil fungsi cancelOrder
             }
             .setNegativeButton("Tidak", null)
             .show()
@@ -106,7 +107,7 @@ class WaitingFragment : Fragment() {
                     Log.e(TAG, "Error loading waiting passengers: ${state.error}")
                     (activity as? ListPassengerActivity)?.showLoading(false)
                     binding.rvListWaitingPassenger.visibility = View.GONE
-                    Toast.makeText(requireContext(), state.error, Toast.LENGTH_LONG).show()
+                    Snackbar.make(binding.root, state.error, Snackbar.LENGTH_LONG).show()
                 }
             }
         }
@@ -122,12 +123,33 @@ class WaitingFragment : Fragment() {
                 is ResultState.Success -> {
                     Log.d(TAG, "Status updated successfully")
                     (activity as? ListPassengerActivity)?.showLoading(false)
-                    Toast.makeText(requireContext(), "Status pesanan diperbarui", Toast.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, "Status pesanan diperbarui", Snackbar.LENGTH_SHORT).show()
                 }
                 is ResultState.Error -> {
                     Log.e(TAG, "Error updating status: ${state.error}")
                     (activity as? ListPassengerActivity)?.showLoading(false)
-                    Toast.makeText(requireContext(), "Gagal memperbarui status: ${state.error}", Toast.LENGTH_LONG).show()
+                    Snackbar.make(binding.root, "Gagal memperbarui status: ${state.error}", Snackbar.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun observeCancelOrder() { // [Baru]
+        viewModel.cancelOrderState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is ResultState.Loading -> {
+                    Log.d(TAG, "Canceling order, showing loading")
+                    (activity as? ListPassengerActivity)?.showLoading(true)
+                }
+                is ResultState.Success -> {
+                    Log.d(TAG, "Order canceled successfully")
+                    (activity as? ListPassengerActivity)?.showLoading(false)
+                    Snackbar.make(binding.root, "Pesanan telah dibatalkan", Snackbar.LENGTH_SHORT).show()
+                }
+                is ResultState.Error -> {
+                    Log.e(TAG, "Error canceling order: ${state.error}")
+                    (activity as? ListPassengerActivity)?.showLoading(false)
+                    Snackbar.make(binding.root, state.error, Snackbar.LENGTH_LONG).show()
                 }
             }
         }

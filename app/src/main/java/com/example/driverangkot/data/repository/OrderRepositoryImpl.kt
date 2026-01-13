@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.driverangkot.data.api.ApiService
+import com.example.driverangkot.data.api.dto.ResponseCancelOrder
 import com.example.driverangkot.data.api.dto.UpdateOrderStatusResponse
 import com.example.driverangkot.data.datasource.OrderDataSource
 import com.example.driverangkot.data.preference.UserPreference
@@ -60,6 +61,18 @@ class OrderRepositoryImpl(
             return response
         } catch (e: Exception) {
             Log.e(TAG, "Error updating order status: ${e.message}", e)
+            throw e
+        }
+    }
+
+    override suspend fun cancelOrder(orderId: Int): ResponseCancelOrder {
+        try {
+            Log.d(TAG, "Canceling order: orderId=$orderId")
+            val response = orderDataSource.cancelOrder(orderId)
+            removeOrder(orderId) // [Baru] Hapus pesanan dari DataStore setelah pembatalan
+            return response
+        } catch (e: Exception) {
+            Log.e(TAG, "Error canceling order: ${e.message}", e)
             throw e
         }
     }
