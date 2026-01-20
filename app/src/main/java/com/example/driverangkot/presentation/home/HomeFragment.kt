@@ -55,8 +55,6 @@ class HomeFragment : Fragment(), LocationPermissionListener {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-    private var userLatitude: Double? = null
-    private var userLongitude: Double? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private var isLocationUpdatesStarted = false
@@ -117,6 +115,10 @@ class HomeFragment : Fragment(), LocationPermissionListener {
                 super.onLocationResult(locationResult)
                 locationResult.locations.lastOrNull()?.let { location ->
                     if (location.hasSpeed()) {
+                        homeViewModel.updateLatestLocation(
+                            location.latitude,
+                            location.longitude
+                        )
                         val speedMs = location.speed
                         val speedKmh = speedMs * 3.6
                         val formattedSpeed = if (speedMs.isNaN() || speedMs < 0) {
@@ -124,6 +126,10 @@ class HomeFragment : Fragment(), LocationPermissionListener {
                         } else {
                             "${speedKmh.toInt()} km/j"
                         }
+                        Log.d(
+                            REALTIME_TAG,
+                            "SPEED | speedMs=$speedMs | speedKmh=${speedKmh.toInt()}"
+                        )
                         requireActivity().runOnUiThread {
                             _binding?.fabSpeed?.text = formattedSpeed
                             Log.d("HomeFragment", "Speed: $formattedSpeed")
@@ -196,12 +202,13 @@ class HomeFragment : Fragment(), LocationPermissionListener {
                 mapsFragment?.animateCameraToBounds(locations)
                 Log.d("HomeFragment", "Updated ${locations.size/2} orders' markers")
             } else {
-                userLatitude?.let { lat ->
-                    userLongitude?.let { lng ->
-                        mapsFragment?.animateCameraToLocation(lat, lng)
-                        Log.d("HomeFragment", "No active orders, camera set to user location")
-                    }
+                val latestLocation = homeViewModel.latestLocation.value
+                if (latestLocation != null) {
+                    mapsFragment?.animateCameraToLocation(latestLocation.latitude, latestLocation.longitude)
                 }
+                Log.d("HomeFragment", "No active orders, camera set to user location")
+
+
             }
         }
     }
@@ -217,6 +224,7 @@ class HomeFragment : Fragment(), LocationPermissionListener {
     private fun setupFAB() {
         binding.fabPower.setOnClickListener {
             val isOnline = userPreference.getStatusOnline() ?: false
+
             if (isOnline) {
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Konfirmasi")
@@ -227,17 +235,22 @@ class HomeFragment : Fragment(), LocationPermissionListener {
                     .setNegativeButton("Tidak", null)
                     .show()
             } else {
-                if (userLatitude != null && userLongitude != null) {
-                    homeViewModel.toOnline(userLatitude!!, userLongitude!!)
+                val latestLocation = homeViewModel.latestLocation.value
+                if (latestLocation != null) {
+                    homeViewModel.toOnline(
+                        latestLocation.latitude,
+                        latestLocation.longitude
+                    )
                 } else {
                     Toast.makeText(
                         requireContext(),
-                        "Lokasi belum tersedia. Coba lagi.",
+                        "Lokasi belum tersedia, mohon tunggu GPS",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         }
+
     }
 
     private fun updateOnlineStatus(isOnline: Boolean) {
@@ -283,8 +296,6 @@ class HomeFragment : Fragment(), LocationPermissionListener {
                 }
                 is ResultState.Success -> {
                     val latLng = state.data
-                    userLatitude = latLng.latitude
-                    userLongitude = latLng.longitude
                     val mapsFragment = childFragmentManager.findFragmentById(R.id.map_driver) as? MapsFragment
                     mapsFragment?.animateCameraToLocation(latLng.latitude, latLng.longitude)
                     startLocationUpdates()
@@ -453,6 +464,10 @@ class HomeFragment : Fragment(), LocationPermissionListener {
     override fun onPause() {
         super.onPause()
         stopLocationUpdates()
+    }
+
+    companion object {
+        private const val REALTIME_TAG = "REALTIME_TRACKING"
     }
 
     override fun onDestroyView() {

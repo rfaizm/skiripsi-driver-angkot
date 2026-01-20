@@ -42,9 +42,11 @@ class LocationUpdateService : Service() {
     private lateinit var updateLocationUseCase: UpdateLocationUseCase
     private var lastLatitude: Double? = null
     private var lastLongitude: Double? = null
-    private val distanceThreshold = 10.0 // Jarak minimum untuk pembaruan (meter)
+    private val distanceThreshold = 5.0 // Jarak minimum untuk pembaruan (meter)
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var isServiceStarted = false
+    private var lastUpdateTime: Long? = null
+
 
     override fun onCreate() {
         super.onCreate()
@@ -118,13 +120,38 @@ class LocationUpdateService : Service() {
 
                     val currentLat = location.latitude
                     val currentLon = location.longitude
+                    val gpsTimestamp = location.time // timestamp dari GPS (ms)
+                    val systemTimestamp = System.currentTimeMillis()
+
+                    Log.d(
+                        REALTIME_TAG,
+                        "GPS_RECEIVED | lat=$currentLat | lon=$currentLon | gpsTime=$gpsTimestamp | systemTime=$systemTimestamp"
+                    )
 
                     if (shouldUpdateLocation(currentLat, currentLon)) {
                         coroutineScope.launch {
                             try {
+                                val sendStartTime = System.currentTimeMillis()
+
                                 val result = updateLocationUseCase(currentLat, currentLon)
+
+                                val sendEndTime = System.currentTimeMillis()
+                                val sendDuration = sendEndTime - sendStartTime
+
                                 if (result.isSuccess) {
-                                    Log.d("LocationUpdateService", "Location updated: lat=$currentLat, long=$currentLon")
+                                    val now = System.currentTimeMillis()
+                                    lastUpdateTime?.let {
+                                        val interval = now - it
+                                        Log.d(
+                                            REALTIME_TAG,
+                                            "UPDATE_INTERVAL | interval=${interval}ms"
+                                        )
+                                    }
+                                    lastUpdateTime = now
+                                    Log.d(
+                                        REALTIME_TAG,
+                                        "SEND_TO_SERVER | lat=$currentLat | lon=$currentLon | sendStart=$sendStartTime | sendEnd=$sendEndTime | duration=${sendDuration}ms"
+                                    )
                                     lastLatitude = currentLat
                                     lastLongitude = currentLon
                                 } else {
@@ -146,6 +173,10 @@ class LocationUpdateService : Service() {
         }
 
         val distance = calculateDistance(lastLatitude!!, lastLongitude!!, currentLat, currentLon)
+        Log.d(
+            REALTIME_TAG,
+            "DISTANCE_CHECK | lastLat=$lastLatitude | lastLon=$lastLongitude | currentLat=$currentLat | currentLon=$currentLon | distance=$distance meter"
+        )
         Log.d("LocationUpdateService", "Distance moved: $distance meters")
         return distance >= distanceThreshold
     }
@@ -208,6 +239,10 @@ class LocationUpdateService : Service() {
         coroutineScope.cancel()
         isServiceStarted = false
         Log.d("LocationUpdateService", "Service destroyed")
+    }
+
+    companion object {
+        private const val REALTIME_TAG = "REALTIME_TRACKING"
     }
 
     override fun onBind(intent: Intent?): IBinder? {

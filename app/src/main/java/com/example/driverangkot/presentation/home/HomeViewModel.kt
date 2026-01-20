@@ -30,6 +30,9 @@ class HomeViewModel(
     private val _locationState = MutableLiveData<ResultState<LatLng>>()
     val locationState: LiveData<ResultState<LatLng>> get() = _locationState
 
+    private val _latestLocation = MutableLiveData<LatLng>()
+    val latestLocation: LiveData<LatLng> get() = _latestLocation
+
     private val _toOnlineState = SingleLiveEvent<ResultState<ToOnlineResponse>>()
     val toOnlineState: LiveData<ResultState<ToOnlineResponse>> get() = _toOnlineState
 
@@ -48,6 +51,10 @@ class HomeViewModel(
                 Log.d(TAG, "Orders updated: ${orders.size} orders")
             }
         }
+    }
+
+    fun updateLatestLocation(lat: Double, lng: Double) {
+        _latestLocation.value = LatLng(lat, lng)
     }
 
     fun getUserLocation() {
