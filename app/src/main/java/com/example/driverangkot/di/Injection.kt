@@ -1,124 +1,44 @@
 package com.example.driverangkot.di
 
 import android.content.Context
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.driverangkot.data.api.ApiConfig
-import com.example.driverangkot.data.datasource.AngkotDataSourceImpl
-import com.example.driverangkot.data.datasource.ListPassengersDataSourceImpl
-import com.example.driverangkot.data.datasource.LocationDataSourceImpl
-import com.example.driverangkot.data.datasource.OrderDataSourceImpl
-import com.example.driverangkot.data.datasource.UserDataSourceImpl
 import com.example.driverangkot.data.preference.UserPreference
 import com.example.driverangkot.data.preference.dataStore
-import com.example.driverangkot.data.repository.AngkotRepositoryImpl
-import com.example.driverangkot.data.repository.ListPassengersRepositoryImpl
-import com.example.driverangkot.data.repository.LocationRepositoryImpl
-import com.example.driverangkot.data.repository.OrderRepositoryImpl
-import com.example.driverangkot.data.repository.UserRepositoryImpl
-import com.example.driverangkot.domain.repository.AngkotRepository
-import com.example.driverangkot.domain.repository.ListPassengersRepository
-import com.example.driverangkot.domain.repository.LocationRepository
-import com.example.driverangkot.domain.repository.OrderRepository
-import com.example.driverangkot.domain.repository.UserRepository
-import com.example.driverangkot.domain.usecase.angkot.ToOfflineUseCase
-import com.example.driverangkot.domain.usecase.location.GetUserLocationUseCase
-import com.example.driverangkot.domain.usecase.user.LoginUseCase
-import com.example.driverangkot.domain.usecase.user.LogoutUseCase
-import com.example.driverangkot.domain.usecase.user.RegisterUseCase
-import com.example.driverangkot.domain.usecase.angkot.ToOnlineUseCase
-import com.example.driverangkot.domain.usecase.angkot.UpdateLocationUseCase
-import com.example.driverangkot.domain.usecase.listpassenger.GetListPassengersUseCase
-import com.example.driverangkot.domain.usecase.listpassenger.GetPlaceNameUseCase
-import com.example.driverangkot.domain.usecase.order.CancelOrderUseCase
-import com.example.driverangkot.domain.usecase.order.UpdateOrderStatusUseCase
-import com.example.driverangkot.domain.usecase.user.GetDriverSaldoUseCase
-import com.example.driverangkot.domain.usecase.user.GetHistoryUseCase
+import com.example.driverangkot.data.repository.AngkotRepository
+import com.example.driverangkot.data.repository.LocationRepository
+import com.example.driverangkot.data.repository.OrderRepository
+import com.example.driverangkot.data.repository.UserRepository
+import com.example.driverangkot.presentation.home.HomeViewModel
+import com.example.driverangkot.presentation.income.IncomeViewModel
+import com.example.driverangkot.presentation.listpassenger.ListPassengersViewModel
+import com.example.driverangkot.presentation.login.LoginViewModel
+import com.example.driverangkot.presentation.profile.ProfileViewModel
+import com.example.driverangkot.presentation.register.RegisterViewModel
 
 object Injection {
-    private fun provideUserRepository(context: Context): UserRepository {
-        val apiService = ApiConfig.getApiService()
-        val userPreference = UserPreference.getInstance(context.dataStore)
-        val userDataSource = UserDataSourceImpl(apiService, userPreference)
-        return UserRepositoryImpl(userDataSource)
-    }
+    private fun userPreference(context: Context) = UserPreference.getInstance(context.dataStore)
+    private fun apiService(context: Context) = ApiConfig.getApiService(userPreference(context))
 
-    private fun provideLocationRepository(context: Context): LocationRepository {
-        val locationDataSource = LocationDataSourceImpl(context)
-        return LocationRepositoryImpl(locationDataSource)
-    }
+    fun userRepository(context: Context) = UserRepository(apiService(context), userPreference(context))
+    fun angkotRepository(context: Context) = AngkotRepository(apiService(context))
+    fun orderRepository(context: Context) = OrderRepository(context.dataStore, apiService(context))
+    fun locationRepository(context: Context) = LocationRepository(context)
 
-    private fun provideAngkotRepository(context: Context): AngkotRepository {
-        val apiService = ApiConfig.getApiService()
-        val userPreference = UserPreference.getInstance(context.dataStore)
-        val angkotDataSource = AngkotDataSourceImpl(apiService, userPreference)
-        return AngkotRepositoryImpl(angkotDataSource)
-    }
-
-    fun provideOrderRepository(context: Context): OrderRepository {
-        val apiService = ApiConfig.getApiService()
-        val userPreference = UserPreference.getInstance(context.dataStore)
-        val orderDataSource = OrderDataSourceImpl(context.dataStore, context, apiService, userPreference)
-        return OrderRepositoryImpl(orderDataSource)
-    }
-
-    private fun provideListPassengersRepository(context: Context): ListPassengersRepository {
-        val apiService = ApiConfig.getApiService()
-        val userPreference = UserPreference.getInstance(context.dataStore)
-        val listPassengersDataSource = ListPassengersDataSourceImpl(apiService, userPreference)
-        return ListPassengersRepositoryImpl(listPassengersDataSource)
-    }
-
-    fun provideRegisterUseCase(context: Context): RegisterUseCase {
-        return RegisterUseCase(provideUserRepository(context))
-    }
-
-    fun provideLoginUseCase(context: Context): LoginUseCase {
-        return LoginUseCase(provideUserRepository(context))
-    }
-
-    fun provideLogoutUseCase(context: Context): LogoutUseCase {
-        return LogoutUseCase(provideUserRepository(context))
-    }
-
-    fun provideGetUserLocationUseCase(context: Context): GetUserLocationUseCase {
-        return GetUserLocationUseCase(provideLocationRepository(context))
-    }
-
-    fun provideToOnlineUseCase(context: Context): ToOnlineUseCase {
-        return ToOnlineUseCase(provideAngkotRepository(context))
-    }
-
-    fun provideToOfflineUseCase(context: Context): ToOfflineUseCase {
-        return ToOfflineUseCase(provideAngkotRepository(context))
-    }
-
-    fun provideUpdateLocationUseCase(context: Context): UpdateLocationUseCase {
-        return UpdateLocationUseCase(provideAngkotRepository(context))
-    }
-
-    fun provideOrderRepositoryUseCase(context: Context): OrderRepository {
-        return provideOrderRepository(context)
-    }
-
-    fun provideGetListPassengersUseCase(context: Context): GetListPassengersUseCase {
-        return GetListPassengersUseCase(provideListPassengersRepository(context))
-    }
-
-    fun provideGetPlaceNameUseCase(context: Context): GetPlaceNameUseCase {
-        return GetPlaceNameUseCase(provideListPassengersRepository(context))
-    }
-
-    fun provideUpdateOrderStatusUseCase(context: Context): UpdateOrderStatusUseCase {
-        return UpdateOrderStatusUseCase(provideOrderRepository(context))
-    }
-
-    fun provideGetDriverSaldoUseCase(context: Context): GetDriverSaldoUseCase {
-        return GetDriverSaldoUseCase(provideUserRepository(context))
-    }
-
-    fun provideGetHistoryUseCase(context: Context): GetHistoryUseCase {
-        return GetHistoryUseCase(provideUserRepository(context))
-    }
-    fun provideCancelOrderUseCase(context: Context): CancelOrderUseCase { // [Baru]
-        return CancelOrderUseCase(provideOrderRepository(context))
+    val viewModelFactory = viewModelFactory {
+        initializer { LoginViewModel(userRepository(this[APPLICATION_KEY]!!)) }
+        initializer { RegisterViewModel(userRepository(this[APPLICATION_KEY]!!)) }
+        initializer { ProfileViewModel(userRepository(this[APPLICATION_KEY]!!)) }
+        initializer { IncomeViewModel(userRepository(this[APPLICATION_KEY]!!)) }
+        initializer {
+            val app = this[APPLICATION_KEY]!!
+            HomeViewModel(locationRepository(app), angkotRepository(app), orderRepository(app))
+        }
+        initializer {
+            val app = this[APPLICATION_KEY]!!
+            ListPassengersViewModel(orderRepository(app), locationRepository(app))
+        }
     }
 }

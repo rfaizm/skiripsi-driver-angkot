@@ -48,20 +48,13 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.lifecycle.livedata.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-    implementation(libs.androidx.activity)
-    implementation(libs.androidx.legacy.support.v4)
     implementation(libs.play.services.maps)
     implementation(libs.androidx.fragment.ktx)
-    implementation(libs.firebase.firestore.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
 
     // Glide Library
     implementation(libs.glide)
@@ -78,21 +71,14 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx.v290)
     implementation(libs.androidx.activity.ktx)
 
-    // Coroutines
-    implementation (libs.kotlinx.coroutines.core)
-
-    //Shimmer
-    implementation(libs.shimmer)
+    // Coroutines (Task.await)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // Find My Location
-    implementation(libs.play.services.maps.v1820)
     implementation(libs.play.services.location)
 
     // Pusher
     implementation(libs.pusher.java.client)
-
-    // Polyline
-    implementation ("com.google.maps.android:android-maps-utils:3.0.0")
 
     // Swipte Button
     implementation("com.ncorti:slidetoact:0.11.0")

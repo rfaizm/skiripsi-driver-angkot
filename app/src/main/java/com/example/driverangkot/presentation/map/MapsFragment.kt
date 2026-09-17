@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.example.driverangkot.R
-import com.example.driverangkot.utils.LocationPermissionListener
+import com.example.driverangkot.presentation.home.HomeFragment
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -34,7 +34,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 class MapsFragment : Fragment() {
 
     private lateinit var mMap: GoogleMap
-    private var permissionListener: LocationPermissionListener? = null
+    private var permissionListener: HomeFragment? = null
     private var isMapReady = false
     private val markers = mutableMapOf<String, Marker>()
 
@@ -76,9 +76,7 @@ class MapsFragment : Fragment() {
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment?.getMapAsync(callback)
 
-        if (parentFragment is LocationPermissionListener) {
-            permissionListener = parentFragment as LocationPermissionListener
-        }
+        permissionListener = parentFragment as? HomeFragment
     }
 
     private fun getMyLocation() {
@@ -146,7 +144,7 @@ class MapsFragment : Fragment() {
         Log.d("MapsFragment", "Camera animated to bounds with ${locations.size} locations")
     }
 
-    // [Berubah] Modifikasi updateMarker untuk mendukung ikon kustom
+    // Modifikasi updateMarker untuk mendukung ikon kustom
     fun updateMarker(id: String, lat: Double, lng: Double, title: String? = null, isStartPoint: Boolean = false) {
         if (!isAdded || !isMapReady) {
             Log.d("MapsFragment", "updateMarker skipped: Fragment not attached or map not ready")
@@ -157,7 +155,7 @@ class MapsFragment : Fragment() {
         val markerOptions = MarkerOptions()
             .position(position)
             .title(title)
-        // [Baru] Gunakan ikon kustom berdasarkan isStartPoint
+        // Gunakan ikon kustom berdasarkan isStartPoint
         markerOptions.icon(
             vectorToBitmap(
                 if (isStartPoint) R.drawable.ic_location_black else R.drawable.ic_location,
@@ -177,7 +175,7 @@ class MapsFragment : Fragment() {
         }
     }
 
-    // [Baru] Fungsi untuk menghapus marker spesifik berdasarkan orderId
+    // Fungsi untuk menghapus marker spesifik berdasarkan orderId
     fun removeMarkersForOrder(orderId: Int) {
         if (!isAdded || !isMapReady) {
             Log.d("MapsFragment", "removeMarkersForOrder skipped: Fragment not attached or map not ready")

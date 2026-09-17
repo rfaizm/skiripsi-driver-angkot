@@ -19,7 +19,6 @@ import retrofit2.Response
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -51,40 +50,31 @@ interface ApiService {
     ) : LoginSuccessResponse
 
     @POST("logout")
-    suspend fun logout(
-        @Header("Authorization") token: String,
-    ): LogoutResponse
+    suspend fun logout(): LogoutResponse
 
     @FormUrlEncoded
     @PATCH("to-online")
     suspend fun toOnline(
-        @Header("Authorization") token: String,
         @Field("lat") latitude: Double,
         @Field("long") longitude: Double
     ) : ToOnlineResponse
 
     @PATCH("to-offline")
-    suspend fun toOffline(
-        @Header("Authorization") token: String,
-    ) : ToOfflineResponse
+    suspend fun toOffline(): ToOfflineResponse
 
     @FormUrlEncoded
     @POST("angkot/update-location")
     suspend fun updateLocation(
-        @Header("Authorization") token: String,
         @Field("lat") latitude: Double,
         @Field("long") longitude: Double
     ) : UpdateLocationResponse
 
     @GET("driver/orders")
-    suspend fun getListPassengers(
-        @Header("Authorization") token: String,
-    ) : ListPassengerResponse
+    suspend fun getListPassengers(): ListPassengerResponse
 
     @FormUrlEncoded
     @POST("place-name")
     suspend fun getPlaceName(
-        @Header("Authorization") token: String,
         @Field("lat") latitude: Double,
         @Field("long") longitude: Double
     ) : GetPlaceNameResponse
@@ -92,25 +82,19 @@ interface ApiService {
     @FormUrlEncoded
     @PATCH("update-order-status")
     suspend fun updateOrderStatus(
-        @Header("Authorization") token: String,
         @Field("order_id") orderId: String,
         @Field("status") status: String
     ) : UpdateOrderStatusResponse
 
     @GET("driver/saldo")
-    suspend fun getSaldo(
-        @Header("Authorization") token: String,
-    ) : SaldoDriverResponse
+    suspend fun getSaldo(): SaldoDriverResponse
 
     @GET("driver/history")
-    suspend fun getHistory(
-        @Header("Authorization") token: String,
-    ) : HistoryResponse
+    suspend fun getHistory(): HistoryResponse
 
     @FormUrlEncoded
     @POST("cancel-order-driver")
     suspend fun cancelOrder(
-        @Header("Authorization") token: String,
         @Field("order_id") orderId: String
     ) : Response<ResponseCancelOrder>
 }

@@ -14,7 +14,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.driverangkot.databinding.FragmentWaitingBinding
 import com.example.driverangkot.di.ResultState
-import com.example.driverangkot.di.ViewModelFactory
+import com.example.driverangkot.di.Injection
 import com.example.driverangkot.presentation.adapter.ListPassengerAdapter
 import com.example.driverangkot.domain.entity.Passenger
 import com.example.driverangkot.presentation.listpassenger.ListPassengerActivity
@@ -30,7 +30,7 @@ class WaitingFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel by viewModels<ListPassengersViewModel> {
-        ViewModelFactory.getInstance(requireContext())
+        Injection.viewModelFactory
     }
 
     private lateinit var adapter: ListPassengerAdapter
@@ -50,7 +50,7 @@ class WaitingFragment : Fragment() {
         setupRecyclerView()
         observePassengers()
         observeUpdateStatus()
-        observeCancelOrder() // [Baru]
+        observeCancelOrder()
     }
 
     override fun onResume() {
@@ -83,7 +83,7 @@ class WaitingFragment : Fragment() {
             .setMessage("Apakah Anda yakin ingin membatalkan pesanan ini?")
             .setPositiveButton("Ya") { _, _ ->
                 Log.d(TAG, "Cancel confirmed: orderId=${passenger.orderId}")
-                viewModel.cancelOrder(passenger.orderId) // [Baru] Panggil fungsi cancelOrder
+                viewModel.cancelOrder(passenger.orderId) // Panggil fungsi cancelOrder
             }
             .setNegativeButton("Tidak", null)
             .show()
@@ -134,7 +134,7 @@ class WaitingFragment : Fragment() {
         }
     }
 
-    private fun observeCancelOrder() { // [Baru]
+    private fun observeCancelOrder() {
         viewModel.cancelOrderState.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is ResultState.Loading -> {

@@ -12,7 +12,8 @@ import androidx.core.app.NotificationCompat
 import com.example.driverangkot.data.preference.UserPreference
 import com.example.driverangkot.data.preference.dataStore
 import com.example.driverangkot.di.Injection
-import com.example.driverangkot.domain.usecase.angkot.UpdateLocationUseCase
+import com.example.driverangkot.utils.Utils
+import com.example.driverangkot.data.repository.AngkotRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -25,11 +26,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
-import kotlin.math.PI
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
 import android.app.NotificationChannel
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
@@ -39,7 +35,7 @@ class LocationUpdateService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private lateinit var userPreference: UserPreference
-    private lateinit var updateLocationUseCase: UpdateLocationUseCase
+    private lateinit var angkotRepository: AngkotRepository
     private var lastLatitude: Double? = null
     private var lastLongitude: Double? = null
     private val distanceThreshold = 5.0 // Jarak minimum untuk pembaruan (meter)
@@ -52,7 +48,7 @@ class LocationUpdateService : Service() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         userPreference = UserPreference.getInstance(dataStore)
-        updateLocationUseCase = Injection.provideUpdateLocationUseCase(this)
+        angkotRepository = Injection.angkotRepository(this)
         setupLocationCallback()
         Log.d("LocationUpdateService", "Service created")
     }
@@ -133,7 +129,7 @@ class LocationUpdateService : Service() {
                             try {
                                 val sendStartTime = System.currentTimeMillis()
 
-                                val result = updateLocationUseCase(currentLat, currentLon)
+                                val result = runCatching { angkotRepository.updateLocation(currentLat, currentLon) }
 
                                 val sendEndTime = System.currentTimeMillis()
                                 val sendDuration = sendEndTime - sendStartTime
@@ -172,27 +168,13 @@ class LocationUpdateService : Service() {
             return true // Update pertama selalu dikirim
         }
 
-        val distance = calculateDistance(lastLatitude!!, lastLongitude!!, currentLat, currentLon)
+        val distance = Utils.calculateDistance(lastLatitude!!, lastLongitude!!, currentLat, currentLon)
         Log.d(
             REALTIME_TAG,
             "DISTANCE_CHECK | lastLat=$lastLatitude | lastLon=$lastLongitude | currentLat=$currentLat | currentLon=$currentLon | distance=$distance meter"
         )
         Log.d("LocationUpdateService", "Distance moved: $distance meters")
         return distance >= distanceThreshold
-    }
-
-    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val r = 6371e3 // Radius bumi dalam meter
-        val phi1 = lat1 * PI / 180
-        val phi2 = lat2 * PI / 180
-        val deltaPhi = (lat2 - lat1) * PI / 180
-        val deltaLambda = (lon2 - lon1) * PI / 180
-
-        val a = sin(deltaPhi / 2) * sin(deltaPhi / 2) +
-                cos(phi1) * cos(phi2) * sin(deltaLambda / 2) * sin(deltaLambda / 2)
-        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-        return r * c // Jarak dalam meter
     }
 
     private fun startLocationUpdates() {
