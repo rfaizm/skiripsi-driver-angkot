@@ -38,62 +38,21 @@ class UserPreference(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    fun getStatusOnline() : Boolean? {
-        return runBlocking {
-            dataStore.data.first()[IS_ONLINE]
-        }
-    }
-
-    suspend fun updateSession(user: User) {
-        dataStore.edit { preferences ->
-            preferences[NAME_KEY] = user.name
-            preferences[EMAIL_KEY] = user.email
-        }
-    }
-
-    fun getDriverId() : Int? {
-        return runBlocking {
-            dataStore.data.first()[DRIVER_ID]
-        }
-    }
-
-    // [Baru] Fungsi untuk mengambil nama
-    fun getName(): String? {
-        return runBlocking {
-            dataStore.data.first()[NAME_KEY]
-        }
-    }
-
-    // [Baru] Fungsi untuk mengambil email
-    fun getEmail(): String? {
-        return runBlocking {
-            dataStore.data.first()[EMAIL_KEY]
-        }
-    }
-
-    fun getLogin(): Boolean? {
-        return runBlocking {
-            dataStore.data.first()[IS_LOGIN_KEY]
-        }
-    }
-
-    fun getTrayekId(): Int? {
-        return runBlocking {
-            dataStore.data.first()[TRAYEK_ID]
-        }
-    }
-
     suspend fun logout() {
         dataStore.edit { preferences ->
             preferences.clear()
         }
     }
 
-    fun getAuthToken(): String? {
-        return runBlocking {
-            dataStore.data.first()[TOKEN_KEY]
-        }
-    }
+    private fun <T> read(key: Preferences.Key<T>): T? = runBlocking { dataStore.data.first()[key] }
+
+    fun getStatusOnline(): Boolean? = read(IS_ONLINE)
+    fun getDriverId(): Int? = read(DRIVER_ID)
+    fun getName(): String? = read(NAME_KEY)
+    fun getEmail(): String? = read(EMAIL_KEY)
+    fun getLogin(): Boolean? = read(IS_LOGIN_KEY)
+    fun getTrayekId(): Int? = read(TRAYEK_ID)
+    fun getAuthToken(): String? = read(TOKEN_KEY)
 
     companion object {
         @Volatile

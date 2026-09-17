@@ -14,7 +14,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.driverangkot.databinding.FragmentPickUpBinding
 import com.example.driverangkot.di.ResultState
-import com.example.driverangkot.di.ViewModelFactory
+import com.example.driverangkot.di.Injection
 import com.example.driverangkot.presentation.adapter.ListPassengerAdapter
 import com.example.driverangkot.domain.entity.Passenger
 import com.example.driverangkot.presentation.listpassenger.ListPassengerActivity
@@ -29,7 +29,7 @@ class PickUpFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel by viewModels<ListPassengersViewModel> {
-        ViewModelFactory.getInstance(requireContext())
+        Injection.viewModelFactory
     }
 
     private lateinit var adapter: ListPassengerAdapter

@@ -10,7 +10,7 @@ import android.widget.Toast
 import androidx.fragment.app.viewModels
 import com.example.driverangkot.databinding.FragmentDailyBinding
 import com.example.driverangkot.di.ResultState
-import com.example.driverangkot.di.ViewModelFactory
+import com.example.driverangkot.di.Injection
 import com.example.driverangkot.presentation.income.IncomeFragment
 import com.example.driverangkot.presentation.income.IncomeViewModel
 import com.example.driverangkot.presentation.listpassenger.ListPassengerActivity
@@ -22,7 +22,7 @@ class DailyFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel by viewModels<IncomeViewModel> {
-        ViewModelFactory.getInstance(requireContext())
+        Injection.viewModelFactory
     }
 
     private val TAG = "DailyFragment"

@@ -1,19 +1,18 @@
 package com.example.driverangkot.presentation.register
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.driverangkot.data.api.dto.RegisterSuccessResponse
+import com.example.driverangkot.data.repository.UserRepository
 import com.example.driverangkot.di.ResultState
-import com.example.driverangkot.domain.usecase.user.RegisterUseCase
+import com.example.driverangkot.di.toResultState
 import kotlinx.coroutines.launch
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
 
 class RegisterViewModel(
-    private val registerUseCase: RegisterUseCase
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _registerState = MutableLiveData<ResultState<RegisterSuccessResponse>>()
@@ -34,14 +33,9 @@ class RegisterViewModel(
     ) {
         _registerState.value = ResultState.Loading
         viewModelScope.launch {
-            val result = registerUseCase(
-                fullName, noHp, noHpEmergency, email, trayekId, noPlat, password,
-                selfPhoto, ktp, sim, stnk
-            )
-            _registerState.value = when {
-                result.isSuccess -> ResultState.Success(result.getOrThrow())
-                else -> ResultState.Error(result.exceptionOrNull()?.message ?: "Gagal registrasi")
-            }
+            _registerState.value = runCatching {
+                userRepository.register(fullName, noHp, noHpEmergency, email, trayekId, noPlat, password, selfPhoto, ktp, sim, stnk)
+            }.toResultState("Gagal registrasi")
         }
     }
 }

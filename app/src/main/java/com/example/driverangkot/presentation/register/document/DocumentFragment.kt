@@ -19,7 +19,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import com.example.driverangkot.databinding.FragmentDocumentBinding
 import com.example.driverangkot.di.ResultState
-import com.example.driverangkot.di.ViewModelFactory
+import com.example.driverangkot.di.Injection
 import com.example.driverangkot.presentation.login.LoginActivity
 import com.example.driverangkot.presentation.register.RegisterViewModel
 import com.example.driverangkot.utils.Utils
@@ -34,7 +34,7 @@ class DocumentFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel by viewModels<RegisterViewModel> {
-        ViewModelFactory.getInstance(requireContext())
+        Injection.viewModelFactory
     }
 
     private var fullname: String? = null

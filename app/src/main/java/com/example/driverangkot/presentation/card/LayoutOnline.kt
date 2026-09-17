@@ -13,11 +13,7 @@ class LayoutOnline @JvmOverloads constructor(
 
     private val binding = LayoutOnlineBinding.inflate(LayoutInflater.from(context), this, true)
 
-    init {
-
-    }
-
-    public fun setOnlineStatus(status: String) {
+    fun setOnlineStatus(status: String) {
         binding.textOnline.text = status
     }
 

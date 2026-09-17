@@ -12,7 +12,7 @@ import com.example.driverangkot.MainActivity
 import com.example.driverangkot.R
 import com.example.driverangkot.databinding.ActivityLoginBinding
 import com.example.driverangkot.di.ResultState
-import com.example.driverangkot.di.ViewModelFactory
+import com.example.driverangkot.di.Injection
 import com.example.driverangkot.presentation.register.RegisterActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
@@ -21,7 +21,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var binding : ActivityLoginBinding
 
     private val viewModel by viewModels<LoginViewModel> {
-        ViewModelFactory.getInstance(this)
+        Injection.viewModelFactory
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

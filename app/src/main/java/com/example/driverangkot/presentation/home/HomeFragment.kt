@@ -25,13 +25,12 @@ import com.example.driverangkot.data.preference.UserPreference
 import com.example.driverangkot.data.preference.dataStore
 import com.example.driverangkot.databinding.FragmentHomeBinding
 import com.example.driverangkot.di.ResultState
-import com.example.driverangkot.di.ViewModelFactory
+import com.example.driverangkot.di.Injection
 import com.example.driverangkot.domain.entity.OrderData
 import com.example.driverangkot.presentation.listpassenger.ListPassengerActivity
 import com.example.driverangkot.presentation.map.MapsFragment
 import com.example.driverangkot.service.LocationUpdateService
 import com.example.driverangkot.service.PusherService
-import com.example.driverangkot.utils.LocationPermissionListener
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationAvailability
 import com.google.android.gms.location.LocationCallback
@@ -51,7 +50,7 @@ import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
-class HomeFragment : Fragment(), LocationPermissionListener {
+class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -70,7 +69,7 @@ class HomeFragment : Fragment(), LocationPermissionListener {
         }
 
     private val homeViewModel by viewModels<HomeViewModel> {
-        ViewModelFactory.getInstance(requireContext())
+        Injection.viewModelFactory
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -332,7 +331,7 @@ class HomeFragment : Fragment(), LocationPermissionListener {
                         }
                         Log.d("HomeFragment", "LocationUpdateService started")
                     }
-                    // [Baru] Mulai PusherService saat online
+                    // Mulai PusherService saat online
                     startPusherService()
                     Toast.makeText(requireContext(), "Anda sudah online", Toast.LENGTH_SHORT).show()
                     Log.d("HomeFragment", "Online status updated: ${state.data}")
@@ -449,7 +448,7 @@ class HomeFragment : Fragment(), LocationPermissionListener {
         return false
     }
 
-    override fun onLocationPermissionGranted() {
+    fun onLocationPermissionGranted() {
         homeViewModel.getUserLocation()
         startLocationUpdates()
     }

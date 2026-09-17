@@ -12,14 +12,14 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.driverangkot.R
 import com.example.driverangkot.databinding.ActivityListPassengerBinding
 import com.example.driverangkot.di.ResultState
-import com.example.driverangkot.di.ViewModelFactory
+import com.example.driverangkot.di.Injection
 import com.example.driverangkot.presentation.adapter.ListPassengerPagerAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 
 class ListPassengerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityListPassengerBinding
-    private val viewModel: ListPassengersViewModel by viewModels { ViewModelFactory.getInstance(this) }
+    private val viewModel: ListPassengersViewModel by viewModels { Injection.viewModelFactory }
     private val TAG = "ListPassengerActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +44,7 @@ class ListPassengerActivity : AppCompatActivity() {
         goToHome()
         setupViewPager()
         observeUpdateStatus()
-        viewModel.fetchPassengers() // [Baru] Panggil fetchPassengers saat inisialisasi
+        viewModel.fetchPassengers() // Panggil fetchPassengers saat inisialisasi
     }
 
     private fun setupViewPager() {
@@ -59,7 +59,7 @@ class ListPassengerActivity : AppCompatActivity() {
             }
         }.attach()
 
-        // [Baru] Listener untuk refresh data saat pindah tab
+        // Listener untuk refresh data saat pindah tab
         binding.viewPagerList.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)

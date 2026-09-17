@@ -1,6 +1,5 @@
 package com.example.driverangkot.service
 
-import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
@@ -13,16 +12,12 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelStoreOwner
 import com.example.driverangkot.R
 import com.example.driverangkot.data.preference.UserPreference
 import com.example.driverangkot.data.preference.dataStore
+import com.example.driverangkot.data.repository.OrderRepository
 import com.example.driverangkot.di.Injection
-import com.example.driverangkot.di.ViewModelFactory
 import com.example.driverangkot.domain.entity.OrderData
-import com.example.driverangkot.domain.repository.OrderRepository
-import com.example.driverangkot.presentation.home.HomeViewModel
 import com.pusher.client.Pusher
 import com.pusher.client.PusherOptions
 import com.pusher.client.channel.Channel
@@ -47,7 +42,7 @@ class PusherService : Service() {
     override fun onCreate() {
         super.onCreate()
         userPreference = UserPreference.getInstance(applicationContext.dataStore)
-        orderRepository = Injection.provideOrderRepository(applicationContext)
+        orderRepository = Injection.orderRepository(applicationContext)
         startForegroundService()
         val isOnline = userPreference.getStatusOnline() ?: false
         if (isOnline) {
@@ -64,16 +59,12 @@ class PusherService : Service() {
 
     private fun startForegroundService() {
         val channelId = "pusher_service"
-        val channelName = "Pusher Service"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                channelName,
-                NotificationManager.IMPORTANCE_LOW
+            notificationManager.createNotificationChannel(
+                NotificationChannel(channelId, "Pusher Service", NotificationManager.IMPORTANCE_LOW)
             )
-            notificationManager.createNotificationChannel(channel)
         }
 
         val notification = NotificationCompat.Builder(this, channelId)
@@ -84,7 +75,6 @@ class PusherService : Service() {
             .build()
 
         startForeground(1, notification)
-        Log.d(TAG, "Foreground service started")
     }
 
     private fun initPusher() {
@@ -101,7 +91,6 @@ class PusherService : Service() {
                 Log.d(TAG, "Pusher state changed from ${change.previousState} to ${change.currentState}")
                 if (change.currentState == ConnectionState.DISCONNECTED) {
                     pusher.connect()
-                    Log.d(TAG, "Attempting to reconnect Pusher")
                 }
             }
 
@@ -110,159 +99,74 @@ class PusherService : Service() {
             }
         })
 
-        val driverChannelName = "driver.$driverId"
-        val driverChannel = pusher.subscribe(driverChannelName)
+        val driverChannel = pusher.subscribe("driver.$driverId")
 
         driverChannel.bind("App\\Events\\OrderCreated") { event ->
             try {
-                Log.d(TAG, "Received OrderCreated event on $driverChannelName: ${event.data}")
                 val data = JSONObject(event.data)
-                val orderId = data.getInt("order_id")
-                val startLat = data.getDouble("starting_point_lat")
-                val startLong = data.getDouble("starting_point_long")
-                val destLat = data.getDouble("destination_point_lat")
-                val destLong = data.getDouble("destination_point_long")
-                val passengers = data.getInt("number_of_passengers")
-                val price = data.getInt("price")
-                val trayekName = data.getString("trayek_name")
-
-                coroutineScope.launch {
-                    orderRepository.saveOrder(
-                        OrderData(
-                            orderId = orderId,
-                            startLat = startLat,
-                            startLong = startLong,
-                            destLat = destLat,
-                            destLong = destLong,
-                            passengers = passengers,
-                            price = price,
-                            trayekName = trayekName
-                        )
-                    )
-                }
-
-                showOrderNotification(orderId, trayekName, passengers, price)
-                Log.d(TAG, "Order received: orderId=$orderId, trayek=$trayekName")
+                val order = OrderData(
+                    orderId = data.getInt("order_id"),
+                    startLat = data.getDouble("starting_point_lat"),
+                    startLong = data.getDouble("starting_point_long"),
+                    destLat = data.getDouble("destination_point_lat"),
+                    destLong = data.getDouble("destination_point_long"),
+                    passengers = data.getInt("number_of_passengers"),
+                    price = data.getInt("price"),
+                    trayekName = data.getString("trayek_name")
+                )
+                coroutineScope.launch { orderRepository.saveOrder(order) }
+                showNotification(
+                    order.orderId,
+                    "Terdapat Pesanan Baru",
+                    "Penumpang: ${order.passengers}, Harga: Rp ${DecimalFormat("#,###").format(order.price)}"
+                )
             } catch (e: Exception) {
                 Log.d(TAG, "Error parsing OrderCreated message: ${e.message}")
-                try {
-                    val data = JSONObject(event.data)
-                    val orderId = data.getInt("order_id")
-                    val trayekName = data.getString("trayek_name")
-                    val passengers = data.getInt("number_of_passengers")
-                    val price = data.getInt("price")
-                    showOrderNotification(orderId, trayekName, passengers, price)
-                } catch (e2: Exception) {
-                    Log.d(TAG, "Failed to show notification for OrderCreated: ${e2.message}")
-                }
             }
         }
 
         driverChannel.bind("App\\Events\\OrderCancelled") { event ->
             try {
-                Log.d(TAG, "Received OrderCancelled event on $driverChannelName: ${event.data}")
                 val data = JSONObject(event.data)
                 val orderId = data.getInt("order_id")
-                val status = data.getString("status")
-                val message = data.getString("message")
-
-                if (status == "dibatalkan") {
-                    coroutineScope.launch {
-                        orderRepository.removeOrder(orderId)
-                    }
-                    showCancelNotification(orderId, message)
-                    Log.d(TAG, "Order $orderId cancelled, notification shown")
+                if (data.getString("status") == "dibatalkan") {
+                    coroutineScope.launch { orderRepository.removeOrder(orderId) }
+                    showNotification(orderId + 1000, "Pesanan Dibatalkan (#$orderId)", data.getString("message"))
                 }
             } catch (e: Exception) {
                 Log.d(TAG, "Error parsing OrderCancelled message: ${e.message}")
-                try {
-                    val data = JSONObject(event.data)
-                    val orderId = data.getInt("order_id")
-                    val message = data.getString("message")
-                    showCancelNotification(orderId, message)
-                } catch (e2: Exception) {
-                    Log.d(TAG, "Failed to show notification for OrderCancelled: ${e2.message}")
-                }
             }
         }
 
         subscribedChannels.add(driverChannel)
         pusher.connect()
-        Log.d(TAG, "Pusher initialized and subscribed to $driverChannelName")
     }
 
-    private fun showOrderNotification(orderId: Int, trayekName: String, passengers: Int, price: Int) {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "order_notifications"
-        val channelName = "Order Notifications"
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                channelName,
-                NotificationManager.IMPORTANCE_HIGH // [Berubah] Gunakan IMPORTANCE_HIGH untuk suara dan heads-up
-            )
-            // [Baru] Tetapkan suara default sistem untuk notifikasi
-            channel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), null)
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Terdapat Pesanan Baru")
-            .setContentText("Penumpang: $passengers, Harga: Rp ${DecimalFormat("#,###").format(price)}") // [Berubah] Gunakan DecimalFormat
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // [Berubah] Gunakan PRIORITY_HIGH untuk kompatibilitas
-            .setAutoCancel(true)
-            .build()
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            ContextCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
+    private fun showNotification(notificationId: Int, title: String, text: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
-            notificationManager.notify(orderId, notification)
-            Log.d(TAG, "Notification shown for orderId=$orderId")
-        } else {
             Log.d(TAG, "Notification skipped: Permission not granted")
+            return
         }
-    }
 
-    private fun showCancelNotification(orderId: Int, message: String) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "order_notifications"
-        val channelName = "Order Notifications"
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                channelName,
-                NotificationManager.IMPORTANCE_HIGH // [Berubah] Gunakan IMPORTANCE_HIGH untuk suara dan heads-up
-            )
-            // [Baru] Tetapkan suara default sistem untuk notifikasi
+            val channel = NotificationChannel(channelId, "Order Notifications", NotificationManager.IMPORTANCE_HIGH)
             channel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), null)
             notificationManager.createNotificationChannel(channel)
         }
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Pesanan Dibatalkan (#$orderId)")
-            .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // [Berubah] Gunakan PRIORITY_HIGH untuk kompatibilitas
+            .setContentTitle(title)
+            .setContentText(text)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            ContextCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            notificationManager.notify(orderId + 1000, notification)
-            Log.d(TAG, "Cancel notification shown for orderId=$orderId")
-        } else {
-            Log.d(TAG, "Cancel notification skipped: Permission not granted")
-        }
+        notificationManager.notify(notificationId, notification)
     }
 
     override fun onDestroy() {
@@ -270,7 +174,6 @@ class PusherService : Service() {
         subscribedChannels.forEach { pusher.unsubscribe(it.name) }
         subscribedChannels.clear()
         pusher.disconnect()
-        Log.d(TAG, "Pusher disconnected and service destroyed")
     }
 
     override fun onBind(intent: Intent?): IBinder? {

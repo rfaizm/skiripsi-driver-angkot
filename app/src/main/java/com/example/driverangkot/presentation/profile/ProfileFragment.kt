@@ -15,7 +15,7 @@ import com.example.driverangkot.data.preference.UserPreference
 import com.example.driverangkot.data.preference.dataStore
 import com.example.driverangkot.databinding.FragmentProfileBinding
 import com.example.driverangkot.di.ResultState
-import com.example.driverangkot.di.ViewModelFactory
+import com.example.driverangkot.di.Injection
 import com.example.driverangkot.presentation.adapter.HistoryAdapter
 import com.example.driverangkot.presentation.login.LoginActivity
 import com.example.driverangkot.utils.Utils
@@ -27,7 +27,7 @@ class ProfileFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val profileViewModel by viewModels<ProfileViewModel> {
-        ViewModelFactory.getInstance(requireContext())
+        Injection.viewModelFactory
     }
 
     private val userPreference by lazy {
@@ -55,7 +55,7 @@ class ProfileFragment : Fragment() {
         binding.logoutButton.setOnClickListener {
             profileViewModel.logout()
         }
-        // [Baru] Panggil getHistory saat fragment dimuat
+        // Panggil getHistory saat fragment dimuat
         profileViewModel.getHistory()
     }
 
@@ -90,7 +90,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    // [Baru] Setup RecyclerView
+    // Setup RecyclerView
     private fun setupRecyclerView() {
         historyAdapter = HistoryAdapter()
         binding.rvHistory.layoutManager = LinearLayoutManager(requireContext())
@@ -124,7 +124,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    // [Baru] Observe history state
+    // Observe history state
     private fun observeHistoryState() {
         profileViewModel.historyState.observe(viewLifecycleOwner) { state ->
             when (state) {

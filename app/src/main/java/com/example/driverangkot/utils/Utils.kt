@@ -1,40 +1,26 @@
 package com.example.driverangkot.utils
 
 import android.content.Context
+import android.location.Location
 import android.net.Uri
 import com.example.driverangkot.R
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 object Utils {
     private const val FILENAME_FORMAT = "yyyyMMdd_HHmmss"
     private val timeStamp: String = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(Date())
 
-    fun createCustomTempFile(context: Context): File {
-        val filesDir = context.externalCacheDir
-        return File.createTempFile(timeStamp, ".jpg", filesDir)
-    }
-
     fun uriToFile(imageUri: Uri, context: Context): File {
-        val myFile = createCustomTempFile(context)
-        val inputStream = context.contentResolver.openInputStream(imageUri) as InputStream
-        val outputStream = FileOutputStream(myFile)
-        val buffer = ByteArray(1024)
-        var length: Int
-        while (inputStream.read(buffer).also { length = it } > 0) outputStream.write(buffer, 0, length)
-        outputStream.close()
-        inputStream.close()
+        val myFile = File.createTempFile(timeStamp, ".jpg", context.externalCacheDir)
+        context.contentResolver.openInputStream(imageUri)!!.use { input ->
+            FileOutputStream(myFile).use { input.copyTo(it) }
+        }
         return myFile
     }
 
@@ -73,13 +59,8 @@ object Utils {
         return "Trayek Tidak Ditemukan"
     }
 
-    fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val R = 6371.0 // Radius bumi dalam kilometer
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLon = Math.toRadians(lon2 - lon1)
-        val a = sin(dLat / 2).pow(2) + cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(dLon / 2).pow(2)
-        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        return R * c // Jarak dalam kilometer
-    }
+    // Meters.
+    fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double =
+        FloatArray(1).also { Location.distanceBetween(lat1, lon1, lat2, lon2, it) }[0].toDouble()
 
 }
